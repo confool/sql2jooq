@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<project name="Guest Book Database Generation Tool" default="GenerationTool">
+	<path id="library">
+		<fileset dir="./../../../lib">
+			<include name="**/*.jar"></include>
+		</fileset>
+	</path>
+
+	<target name="GenerationTool">
+		<java fork="true" classname="org.jooq.util.GenerationTool"
+			classpathref="library">
+			<classpath path="." />
+			<arg value="/guestbook.xml" />
+		</java>
+	</target>
+</project>
+
