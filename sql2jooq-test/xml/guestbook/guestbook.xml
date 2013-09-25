@@ -38,7 +38,10 @@
       <packageName>gudusoft.guestbook</packageName>
 
       <!-- The destination directory of your generated classes -->
+      <!-- 
       <directory>E:/git/sql2jooq/sql2jooq-test/src</directory>
+       -->
+       <directory>./../../src</directory>
     </target>
   </generator>
 </configuration>

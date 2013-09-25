@@ -1,5 +1,5 @@
 
-package gudusoft.sql2jooq;
+package gudusoft.sql2jooq.guestbook;
 
 import gudusoft.guestbook.tables.Posts;
 
@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
 import org.jooq.Result;
 import org.jooq.SQLDialect;
@@ -24,7 +25,7 @@ public class testGuestBook
 		Connection conn = null;
 
 		String userName = "root";
-		String password = "";
+		String password = "cnfree";
 		String url = "jdbc:mysql://localhost:3306/guestbook";
 
 		try
@@ -32,10 +33,7 @@ public class testGuestBook
 			Class.forName( "com.mysql.jdbc.Driver" ).newInstance( );
 			conn = DriverManager.getConnection( url, userName, password );
 
-			DSLContext create = DSL.using( conn, SQLDialect.MYSQL );
-			Result<Record> result = create.select( )
-					.from( Posts.POSTS )
-					.fetch( );
+			Result<Record> result = getResultSet( conn );
 
 			for ( Record r : result )
 			{
@@ -71,6 +69,22 @@ public class testGuestBook
 			}
 		}
 
+	}
+
+	private static Result getResultSet( Connection conn )
+	{
+		DSLContext create = DSL.using( conn, SQLDialect.MYSQL );
+		Posts a = Posts.POSTS.as( "a" );
+		Result result = create.select( )
+				.from( a )
+				.where( ( (Field) a.BODY ).equal( "Hello World" )
+						.and( ( (Field) a.ID ).equal( 1 ) ) )
+				.groupBy( ( (Field) a.BODY ), ( (Field) a.ID ) )
+				.having( DSL.count( ).greaterThan( 0 ) )
+				.orderBy( ( (Field) a.ID ) )
+				.fetch( );
+
+		return result;
 	}
 
 }

@@ -131,7 +131,7 @@ public class jooqConverter
 
 	private void convertSelectStmt( TSelectSqlStatement stmt )
 	{
-		convertResult.append( "DSLContext create = DSL.using(connection, SQLDialect." )
+		convertResult.append( "DSLContext create = DSL.using(conn, SQLDialect." )
 				.append( stmt.dbvendor.toString( ).substring( 3 ).toUpperCase( ) )
 				.append( ");\n" );
 
@@ -149,9 +149,7 @@ public class jooqConverter
 									.toString( )
 									.toLowerCase( ) )
 							.append( " = " )
-							.append( table.getTableName( )
-									.toString( )
-									.toUpperCase( ) )
+							.append( getTableRealName( table ) )
 							.append( ".as(\"" )
 							.append( table.getAliasClause( )
 									.toString( )
@@ -161,7 +159,7 @@ public class jooqConverter
 			}
 		}
 
-		convertResult.append( "create.select( " );
+		convertResult.append( "Result result = create.select( " );
 		if ( stmt.getResultColumnList( ) != null )
 		{
 			for ( int i = 0; i < stmt.getResultColumnList( ).size( ); i++ )
@@ -317,23 +315,31 @@ public class jooqConverter
 		{
 			convertResult.delete( index, convertResult.length( ) );
 		}
-		convertResult.append( ";\n" );
+		convertResult.append( ".fetch( );\n" );
+	}
+
+	private String getTableName( TTable table )
+	{
+		if ( table.getAliasClause( ) != null )
+		{
+			return table.getAliasClause( ).toString( ).toLowerCase( );
+		}
+		else
+		{
+			return getTableRealName( table );
+		}
+	}
+
+	private String getTableRealName( TTable table )
+	{
+		return firstUpper( table.getTableName( ).toString( ) )
+				+ "."
+				+ table.getTableName( ).toString( ).toUpperCase( );
 	}
 
 	private void appendTable( TTable table )
 	{
-		if ( table.getAliasClause( ) != null )
-		{
-			convertResult.append( table.getAliasClause( )
-					.toString( )
-					.toLowerCase( ) );
-		}
-		else
-		{
-			convertResult.append( table.getTableName( )
-					.toString( )
-					.toUpperCase( ) );
-		}
+		convertResult.append( getTableName( table ) );
 	}
 
 	private void appendExpression( TExpression expression,
@@ -467,6 +473,7 @@ public class jooqConverter
 		TFunctionCall function = expression.getFunctionCall( );
 		String content = function.toString( ).toLowerCase( );
 		content = content.substring( 0, content.indexOf( '(' ) );
+		buffer.append( "DSL." );
 		buffer.append( content );
 		buffer.append( "( " );
 		for ( int i = 0; i < function.getArgs( ).size( ); i++ )
@@ -515,16 +522,20 @@ public class jooqConverter
 
 			tableName = caseTableName( tableName, tables );
 
-			return tableName
+			return "((Field)"
+					+ tableName
 					+ "."
-					+ columnName.substring( index + 1 ).toUpperCase( );
+					+ columnName.substring( index + 1 ).toUpperCase( )
+					+ ")";
 		}
 		else
 		{
 			TTable table = tables.getTable( 0 );
-			return table.getTableName( ).toString( ).toUpperCase( )
+			return "((Field)"
+					+ getTableName( table )
 					+ "."
-					+ columnName;
+					+ columnName.toUpperCase( )
+					+ ")";
 		}
 	}
 
@@ -535,7 +546,7 @@ public class jooqConverter
 			TTable table = tables.getTable( i );
 			if ( table.getTableName( ).toString( ).equalsIgnoreCase( tableName ) )
 			{
-				return tableName.toUpperCase( );
+				return getTableName( table );
 			}
 			else if ( table.getAliasClause( ) != null
 					&& table.getAliasClause( )

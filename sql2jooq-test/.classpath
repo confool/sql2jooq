@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="../lib/jooq-meta-3.1.0.jar"/>
 	<classpathentry kind="lib" path="../lib/jooq-scala-3.1.0.jar"/>
 	<classpathentry kind="lib" path="../lib/mysql-connector-java-5.1.23-bin.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/sql2jooq"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
