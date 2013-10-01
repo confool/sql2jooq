@@ -22,8 +22,10 @@ public class SakilaTest4 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select actor_id, first_name, last_name "
-+ "from actor;";
+		String sql = "select first_name, last_name"
++ "from actor"
++ "join film_actor on actor.actor_id = film_actor.actor_id"
++ "join film on film.film_id = film_actor.film_id;";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,8 +40,10 @@ public class SakilaTest4 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Result result = create.select( ((Field)Actor.ACTOR.ACTOR_ID), ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) )
-	.from( Actor.ACTOR ).fetch( );
+Result result = create.select( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) )
+	.from( Actor.ACTOR )
+	.join( Film_actor.FILM_ACTOR ).on( ((Field)Actor.ACTOR.ACTOR_ID).equal( ((Field)Film_actor.FILM_ACTOR.ACTOR_ID) ) )
+	.join( Film.FILM ).on( ((Field)Film.FILM.FILM_ID).equal( ((Field)Film_actor.FILM_ACTOR.FILM_ID) ) ).fetch( );
 
 		return result;
 	}

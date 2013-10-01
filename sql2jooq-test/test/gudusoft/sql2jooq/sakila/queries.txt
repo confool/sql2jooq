@@ -1,5 +1,8 @@
 select count(*) c from actor;
 select 1 from actor;
 select first_name, last_name from actor where actor_id = 1;
-select actor_id, first_name, last_name 
-from actor;
+
+select first_name, last_name
+from actor
+join film_actor on actor.actor_id = film_actor.actor_id
+join film on film.film_id = film_actor.film_id;
