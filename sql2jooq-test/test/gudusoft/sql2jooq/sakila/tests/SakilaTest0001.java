@@ -16,14 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest4 extends MySQLTest
+public class SakilaTest0001 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select film_id "
-+ "from film_actor";
+		String sql = "select count(*) c from actor";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,8 +37,8 @@ public class SakilaTest4 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Result result = create.select( ((Field)Film_actor.FILM_ACTOR.FILM_ID) )
-	.from( Film_actor.FILM_ACTOR ).fetch( );
+Result result = create.select( DSL.count(  ) )
+	.from( Actor.ACTOR ).fetch( );
 
 		return result;
 	}

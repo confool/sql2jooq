@@ -7,3 +7,15 @@ from film_actor;
 select * from actor;
 select 1 from dual;
 select 1;
+
+select city, country
+from city join country on city.country_id = country.country_id;
+
+select city.city, country.country
+from city join country on city.country_id = country.country_id;
+
+select c.city, co.country
+from city c 
+join country co 
+  on c.country_id = co.country_id;
+  

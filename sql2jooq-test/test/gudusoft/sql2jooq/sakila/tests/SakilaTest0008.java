@@ -16,13 +16,14 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest2 extends MySQLTest
+public class SakilaTest0008 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from actor";
+		String sql = "select city, country"
++ "from city join country on city.country_id = country.country_id";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,8 +38,9 @@ public class SakilaTest2 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Result result = create.select( inline( 1 ) )
-	.from( Actor.ACTOR ).fetch( );
+Result result = create.select( ((Field)City.CITY.CITY), ((Field)City.CITY.COUNTRY) )
+	.from( City.CITY )
+	.join( Country.COUNTRY ).on( ((Field)City.CITY.COUNTRY_ID).equal( ((Field)Country.COUNTRY.COUNTRY_ID) ) ).fetch( );
 
 		return result;
 	}

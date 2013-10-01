@@ -35,11 +35,11 @@ public class CodeGenerator
             i++;
 
             try {
-                System.out.println("Generating code for : " + query);
+            	final String id = String.format("%1$4s", i).replace(" ", "0");
+            	System.out.println("Generating code for : (" + id + ") " + query.replaceAll("[\\n\\r]+", "$0                             "));
 
                 jooqConverter convert = new jooqConverter( EDbVendor.dbvmysql, query );
                 final String result = convert.getConvertResult( );
-                final String id = "" + i;
 
                 File templateFile = new File( "./xml/guestbook/SakilaTest.template.java" );
                 File saveFile = new File( "./test/gudusoft/sql2jooq/sakila/tests/SakilaTest" + id + ".java" );
