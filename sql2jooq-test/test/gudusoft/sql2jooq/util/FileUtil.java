@@ -16,9 +16,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -28,6 +30,27 @@ import java.util.regex.Pattern;
 public class FileUtil
 {
 
+	public static String read(File file) throws IOException {
+        RandomAccessFile f = null;
+	    try 
+	    {
+	    	f = new RandomAccessFile(file, "r");
+            byte[] contents = new byte[(int) f.length()];
+            f.readFully(contents);
+            return new String(contents);
+        }
+        finally {
+        	try 
+        	{
+        		f.close();
+        	}
+        	catch (IOException ignore) 
+        	{
+        	}
+        }
+	}
+	
+	
 	public static void replaceFile( File file, String regex1, String regex2,
 			String replacement, File saveFile )
 	{
