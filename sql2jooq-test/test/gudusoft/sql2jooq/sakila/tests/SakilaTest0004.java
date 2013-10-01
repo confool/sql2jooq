@@ -22,7 +22,7 @@ public class SakilaTest0004 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select film_id "
+		String sql = "select film_id  "
 + "from film_actor";
 		
 		if (sql.toLowerCase().startsWith("select")) 

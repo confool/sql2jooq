@@ -22,7 +22,7 @@ public class SakilaTest0009 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select city.city, country.country"
+		String sql = "select city.city, country.country "
 + "from city join country on city.country_id = country.country_id";
 		
 		if (sql.toLowerCase().startsWith("select")) 
