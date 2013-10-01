@@ -1,0 +1,3 @@
+select count(*) c from actor;
+select 1 from actor;
+select first_name, last_name from actor where actor_id = 1;
