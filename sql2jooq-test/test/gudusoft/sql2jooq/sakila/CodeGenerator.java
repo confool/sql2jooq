@@ -47,7 +47,7 @@ public class CodeGenerator
                 Map<String, String> replacements = new HashMap<String, String>();
                 replacements.put(Pattern.quote( "${ID}" ), id);
                 replacements.put(Pattern.quote( "${DSL}" ), result);
-                replacements.put(Pattern.quote( "${SQL}" ), query.replace("\"", "\\\""));
+                replacements.put(Pattern.quote( "${SQL}" ), query.replace("\"", "\\\"").replaceAll("[\\n\\r]+", "\"$0+ \""));
 
                 FileUtil.replaceFile( templateFile,
                         ".*",
