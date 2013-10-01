@@ -5,3 +5,5 @@ select film_id
 from film_actor;
 
 select * from actor;
+select 1 from dual;
+select 1;
