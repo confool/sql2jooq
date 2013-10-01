@@ -3,3 +3,5 @@ select 1 from actor;
 select first_name, last_name from actor where actor_id = 1;
 select film_id 
 from film_actor;
+
+select * from actor;
