@@ -42,7 +42,7 @@ public class SakilaTest0010 extends MySQLTest
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 City c = City.CITY.as("c");
 Country co = Country.COUNTRY.as("co");
-Result result = create.select( ((Field)c.CITY), ((Field)co.COUNTRY) )
+Result result = create.select( ((Field)c.CITY_), ((Field)co.COUNTRY_) )
 	.from( c )
 	.join( co ).on( ((Field)c.COUNTRY_ID).equal( ((Field)co.COUNTRY_ID) ) ).fetch( );
 

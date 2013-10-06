@@ -38,8 +38,8 @@ public class SakilaTest0004 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Result result = create.select( ((Field)Film_actor.FILM_ACTOR.FILM_ID) )
-	.from( Film_actor.FILM_ACTOR ).fetch( );
+Result result = create.select( ((Field)FilmActor.FILM_ACTOR.FILM_ID) )
+	.from( FilmActor.FILM_ACTOR ).fetch( );
 
 		return result;
 	}

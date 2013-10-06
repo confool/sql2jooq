@@ -16,6 +16,7 @@ import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TTableList;
+import gudusoft.gsqlparser.sql2jooq.tool.GenerationUtil;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
 import gudusoft.gsqlparser.stmt.TMergeSqlStatement;
@@ -23,6 +24,8 @@ import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
+
+import org.jooq.tools.StringUtils;
 
 public class jooqConverter
 {
@@ -143,7 +146,7 @@ public class jooqConverter
 				TTable table = tables.getTable( i );
 				if ( table.getAliasClause( ) != null )
 				{
-					convertResult.append( firstUpper( table.getName( ) ) )
+					convertResult.append( getTableClassName( table.getName( ) ) )
 							.append( " " )
 							.append( table.getAliasClause( )
 									.toString( )
@@ -320,7 +323,11 @@ public class jooqConverter
 
 	private String getTableName( TTable table )
 	{
-		if ( table.getAliasClause( ) != null )
+		if ( table.getName( ).equalsIgnoreCase( "DUAL" ) )
+		{
+			return "dual()";
+		}
+		else if ( table.getAliasClause( ) != null )
 		{
 			return table.getAliasClause( ).toString( ).toLowerCase( );
 		}
@@ -332,7 +339,7 @@ public class jooqConverter
 
 	private String getTableRealName( TTable table )
 	{
-		return firstUpper( table.getTableName( ).toString( ) )
+		return getTableClassName( table.getTableName( ).toString( ) )
 				+ "."
 				+ table.getTableName( ).toString( ).toUpperCase( );
 	}
@@ -520,23 +527,54 @@ public class jooqConverter
 				tableName = tableName.substring( tableName.lastIndexOf( "." ) + 1 );
 			}
 
+			columnName = columnName.substring( index + 1 ).toUpperCase( );
+
+			TTable table = getTableFromName( tableName, tables );
+
 			tableName = caseTableName( tableName, tables );
 
-			return "((Field)"
-					+ tableName
-					+ "."
-					+ columnName.substring( index + 1 ).toUpperCase( )
-					+ ")";
+			if ( columnName.equalsIgnoreCase( table.getTableName( ).toString( ) ) )
+			{
+				columnName += "_";
+			}
+
+			return "((Field)" + tableName + "." + columnName + ")";
 		}
 		else
 		{
 			TTable table = tables.getTable( 0 );
+
+			if ( columnName.equalsIgnoreCase( table.getTableName( ).toString( ) ) )
+			{
+				columnName += "_";
+			}
+
 			return "((Field)"
 					+ getTableName( table )
 					+ "."
 					+ columnName.toUpperCase( )
 					+ ")";
 		}
+	}
+
+	private TTable getTableFromName( String tableName, TTableList tables )
+	{
+		for ( int i = 0; i < tables.size( ); i++ )
+		{
+			TTable table = tables.getTable( i );
+			if ( table.getTableName( ).toString( ).equalsIgnoreCase( tableName ) )
+			{
+				return table;
+			}
+			else if ( table.getAliasClause( ) != null
+					&& table.getAliasClause( )
+							.toString( )
+							.equalsIgnoreCase( tableName ) )
+			{
+				return table;
+			}
+		}
+		return null;
 	}
 
 	private String caseTableName( String tableName, TTableList tables )
@@ -559,10 +597,9 @@ public class jooqConverter
 		return tableName;
 	}
 
-	private String firstUpper( String table )
+	private String getTableClassName( String table )
 	{
-		return Character.toUpperCase( table.charAt( 0 ) )
-				+ table.substring( 1 ).toLowerCase( );
+		return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table ) );
 	}
 
 	/**
