@@ -11,7 +11,7 @@ package gudusoft.guestbook;
 @java.lang.SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Guestbook extends org.jooq.impl.SchemaImpl {
 
-	private static final long serialVersionUID = -2087745405;
+	private static final long serialVersionUID = 872110603;
 
 	/**
 	 * The singleton instance of <code>guestbook</code>
@@ -34,6 +34,7 @@ public class Guestbook extends org.jooq.impl.SchemaImpl {
 
 	private final java.util.List<org.jooq.Table<?>> getTables0() {
 		return java.util.Arrays.<org.jooq.Table<?>>asList(
+			gudusoft.guestbook.tables.Mails.MAILS,
 			gudusoft.guestbook.tables.Posts.POSTS);
 	}
 }

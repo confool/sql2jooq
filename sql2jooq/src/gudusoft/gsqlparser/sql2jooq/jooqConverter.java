@@ -14,8 +14,12 @@ import gudusoft.gsqlparser.nodes.TJoinItem;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
+import gudusoft.gsqlparser.nodes.TResultColumnList;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TTableList;
+import gudusoft.gsqlparser.sql2jooq.db.ColumnMetaData;
+import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
+import gudusoft.gsqlparser.sql2jooq.db.TableMetaData;
 import gudusoft.gsqlparser.sql2jooq.tool.GenerationUtil;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
@@ -32,7 +36,20 @@ public class jooqConverter
 
 	private String errorMessage;
 	private int resultCode;
+	private DatabaseMetaData metadata;
 	private StringBuffer convertResult = new StringBuffer( );
+	private boolean ignoreGeneric = false;
+	private TGSqlParser sqlparser;
+
+	public DatabaseMetaData getMetadata( )
+	{
+		return metadata;
+	}
+
+	public void setMetadata( DatabaseMetaData metadata )
+	{
+		this.metadata = metadata;
+	}
 
 	public String getConvertResult( )
 	{
@@ -56,22 +73,43 @@ public class jooqConverter
 		convertResult.delete( 0, convertResult.length( ) );
 	}
 
+	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
+			String sqlText )
+	{
+		sqlparser = new TGSqlParser( vendor );
+		sqlparser.sqltext = sqlText;
+		this.metadata = metadata;
+	}
+
+	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
+			File sqlFile )
+	{
+		sqlparser = new TGSqlParser( vendor );
+		sqlparser.sqlfilename = sqlFile.getAbsolutePath( );
+		this.metadata = metadata;
+	}
+
 	public jooqConverter( EDbVendor vendor, String sqlText )
 	{
-		TGSqlParser sqlparser = new TGSqlParser( vendor );
+		sqlparser = new TGSqlParser( vendor );
 		sqlparser.sqltext = sqlText;
-		convert( sqlparser );
 	}
 
 	public jooqConverter( EDbVendor vendor, File sqlFile )
 	{
-		TGSqlParser sqlparser = new TGSqlParser( vendor );
+		sqlparser = new TGSqlParser( vendor );
 		sqlparser.sqlfilename = sqlFile.getAbsolutePath( );
-		convert( sqlparser );
 	}
 
-	private void convert( TGSqlParser sqlparser )
+	public void convert( )
 	{
+		convert( false );
+	}
+
+	public void convert( boolean ignoreGeneric )
+	{
+		this.ignoreGeneric = ignoreGeneric;
+
 		clearResult( );
 
 		resultCode = sqlparser.parse( );
@@ -146,7 +184,7 @@ public class jooqConverter
 				TTable table = tables.getTable( i );
 				if ( table.getAliasClause( ) != null )
 				{
-					convertResult.append( getTableClassName( table.getName( ) ) )
+					convertResult.append( getTableJavaName( table.getName( ) ) )
 							.append( " " )
 							.append( table.getAliasClause( )
 									.toString( )
@@ -162,7 +200,32 @@ public class jooqConverter
 			}
 		}
 
-		convertResult.append( "Result result = create.select( " );
+		if ( metadata == null
+				|| stmt.getResultColumnList( ) == null
+				|| ignoreGeneric )
+		{
+			convertResult.append( "Result result = create.select( " );
+		}
+		else
+		{
+			TResultColumnList columns = stmt.getResultColumnList( );
+			convertResult.append( "Result<org.jooq.Record" )
+					.append( columns.size( ) )
+					.append( "<" );
+			for ( int i = 0; i < columns.size( ); i++ )
+			{
+				ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( columns.getResultColumn( i )
+						.getExpr( ),
+						stmt ),
+						stmt );
+				convertResult.append( column.getJavaTypeClass( ) );
+				if ( i < columns.size( ) - 1 )
+				{
+					convertResult.append( ", " );
+				}
+			}
+			convertResult.append( ">> result = create.select( " );
+		}
 		if ( stmt.getResultColumnList( ) != null )
 		{
 			for ( int i = 0; i < stmt.getResultColumnList( ).size( ); i++ )
@@ -224,7 +287,8 @@ public class jooqConverter
 						convertResult.append( ".join( " );
 						appendTable( joinItem.getTable( ) );
 						convertResult.append( " ).on( " );
-						appendExpression( joinItem.getOnCondition( ), stmt );
+						convertResult.append( getExpressionJavaCode( joinItem.getOnCondition( ),
+								stmt ) );
 						convertResult.append( " )\n\t" );
 					}
 				}
@@ -248,7 +312,7 @@ public class jooqConverter
 		{
 			convertResult.append( ".where( " );
 			TExpression expression = stmt.getWhereClause( ).getCondition( );
-			appendExpression( expression, stmt );
+			convertResult.append( getExpressionJavaCode( expression, stmt ) );
 			convertResult.append( " )\n\t" );
 		}
 
@@ -259,7 +323,8 @@ public class jooqConverter
 			for ( int i = 0; i < items.size( ); i++ )
 			{
 				TGroupByItem item = items.getGroupByItem( i );
-				appendExpression( item.getExpr( ), stmt );
+				convertResult.append( getExpressionJavaCode( item.getExpr( ),
+						stmt ) );
 				if ( i < items.size( ) - 1 )
 				{
 					convertResult.append( ", " );
@@ -270,8 +335,9 @@ public class jooqConverter
 			if ( stmt.getGroupByClause( ).getHavingClause( ) != null )
 			{
 				convertResult.append( ".having( " );
-				appendExpression( stmt.getGroupByClause( ).getHavingClause( ),
-						stmt );
+				convertResult.append( getExpressionJavaCode( stmt.getGroupByClause( )
+						.getHavingClause( ),
+						stmt ) );
 				convertResult.append( " )\n\t" );
 			}
 		}
@@ -283,7 +349,8 @@ public class jooqConverter
 			for ( int i = 0; i < items.size( ); i++ )
 			{
 				TOrderByItem item = items.getOrderByItem( i );
-				appendExpression( item.getSortKey( ), stmt );
+				convertResult.append( getExpressionJavaCode( item.getSortKey( ),
+						stmt ) );
 				if ( item.getSortType( ) == TBaseType.srtAsc )
 				{
 					convertResult.append( ".asc( )" );
@@ -339,7 +406,7 @@ public class jooqConverter
 
 	private String getTableRealName( TTable table )
 	{
-		return getTableClassName( table.getTableName( ).toString( ) )
+		return getTableJavaName( table.getTableName( ).toString( ) )
 				+ "."
 				+ table.getTableName( ).toString( ).toUpperCase( );
 	}
@@ -349,33 +416,66 @@ public class jooqConverter
 		convertResult.append( getTableName( table ) );
 	}
 
-	private void appendExpression( TExpression expression,
+	private String getExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt )
 	{
+		StringBuffer buffer = new StringBuffer( );
 		switch ( expression.getExpressionType( ) )
 		{
 			case simple_comparison_t :
-				appendComparisonExpression( expression, stmt );
+				buffer.append( getComparisonExpressionJavaCode( expression,
+						stmt ) );
 				break;
 			case simple_object_name_t :
-				appendObjectNameExpression( expression, stmt );
+				buffer.append( appendObjectNameExpression( expression, stmt ) );
 				break;
 			case logical_and_t :
-				appendLogicExpression( expression, stmt );
+				buffer.append( appendLogicExpression( expression, stmt ) );
 				break;
 			case simple_constant_t :
 			{
-				String content = getConstantExpression( expression );
-				convertResult.append( content );
+				String content = getConstantExpression( expression, null );
+				buffer.append( content );
 			}
 				break;
 			case function_t :
-				convertResult.append( getFunction( expression, stmt.tables ) );
+				buffer.append( getFunction( expression, stmt.tables ) );
 				break;
 		}
+		return buffer.toString( );
 	}
 
-	private String getConstantExpression( TExpression expression )
+	private String getExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		switch ( expression.getExpressionType( ) )
+		{
+			case simple_comparison_t :
+				buffer.append( getComparisonExpressionJavaCode( expression,
+						stmt ) );
+				break;
+			case simple_object_name_t :
+				buffer.append( appendObjectNameExpression( expression, stmt ) );
+				break;
+			case logical_and_t :
+				buffer.append( appendLogicExpression( expression, stmt ) );
+				break;
+			case simple_constant_t :
+			{
+				String content = getConstantExpression( expression, column );
+				buffer.append( content );
+			}
+				break;
+			case function_t :
+				buffer.append( getFunction( expression, stmt.tables ) );
+				break;
+		}
+		return buffer.toString( );
+	}
+
+	private String getConstantExpression( TExpression expression,
+			ColumnMetaData column )
 	{
 		String content = expression.toString( );
 		if ( content.startsWith( "'" ) && content.endsWith( "'" ) )
@@ -384,71 +484,140 @@ public class jooqConverter
 					+ content.substring( 1, content.length( ) - 1 )
 					+ "\"";
 		}
+		if ( column != null && !ignoreGeneric )
+		{
+			return column.getJavaTypeClass( ) + ".valueOf( " + content + " )";
+		}
 		return content;
 	}
 
-	private void appendLogicExpression( TExpression expression,
+	private String appendLogicExpression( TExpression expression,
 			TCustomSqlStatement stmt )
 	{
-		appendExpression( expression.getLeftOperand( ), stmt );
-		convertResult.append( ".and( " );
-		appendExpression( expression.getRightOperand( ), stmt );
-		convertResult.append( " )" );
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+				stmt ) );
+		buffer.append( ".and( " );
+		buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
+				stmt ) );
+		buffer.append( " )" );
+		return buffer.toString( );
 	}
 
-	private void appendObjectNameExpression( TExpression expression,
+	private String appendObjectNameExpression( TExpression expression,
 			TCustomSqlStatement stmt )
 	{
-		convertResult.append( getObjectColumnName( expression.toString( ),
-				stmt.tables ) );
+		return getObjectColumnName( expression.toString( ), stmt.tables );
 
 	}
 
-	private void appendComparisonExpression( TExpression expr,
+	private String getComparisonExpressionJavaCode( TExpression expr,
 			TCustomSqlStatement stmt )
 	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( expr.getComparisonOperator( ).tokencode == (int) '=' )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".equal( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			String left = getExpressionJavaCode( expr.getLeftOperand( ), stmt );
+			buffer.append( left );
+			buffer.append( ".equal( " );
+			ColumnMetaData column = getColumnMetaDataBySql( left, stmt );
+			if ( column != null )
+			{
+				buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
+						stmt,
+						column ) );
+			}
+			else
+			{
+				buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
+						stmt ) );
+			}
+			buffer.append( " )" );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.not_equal )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".notEqual( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
+			buffer.append( ".notEqual( " );
+			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
+			buffer.append( " )" );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == (int) '>' )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".greaterThan( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
+			buffer.append( ".greaterThan( " );
+			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
+			buffer.append( " )" );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == (int) '<' )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".lessThan( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
+			buffer.append( ".lessThan( " );
+			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
+			buffer.append( " )" );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.less_equal )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".lessOrEqual( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
+			buffer.append( ".lessOrEqual( " );
+			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
+			buffer.append( " )" );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.great_equal )
 		{
-			appendExpression( expr.getLeftOperand( ), stmt );
-			convertResult.append( ".greaterOrEqual( " );
-			appendExpression( expr.getRightOperand( ), stmt );
-			convertResult.append( " )" );
+			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
+			buffer.append( ".greaterOrEqual( " );
+			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
+			buffer.append( " )" );
 		}
+		return buffer.toString( );
+	}
+
+	private ColumnMetaData getColumnMetaDataBySql( String sql,
+			TCustomSqlStatement stmt )
+	{
+		if ( metadata == null )
+			return null;
+
+		sql = removeParenthesis( sql );
+		int index = sql.lastIndexOf( '.' );
+		String columnName = sql;
+		if ( index != -1 )
+		{
+			columnName = sql.substring( index + 1 );
+		}
+		if ( columnName.endsWith( "_" ) )
+		{
+			columnName = columnName.substring( 0, columnName.length( ) - 1 );
+		}
+		if ( index != -1 )
+		{
+			sql = sql.substring( 0, index );
+			String tableName = sql;
+			index = sql.lastIndexOf( '.' );
+			if ( index != -1 )
+			{
+				tableName = sql.substring( index + 1 );
+			}
+			TTable table = getTableFromName( tableName, stmt.tables );
+			if ( table != null )
+			{
+				TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
+						.toString( ) );
+				if ( tableMetaData != null )
+				{
+					return tableMetaData.getColumnMetaData( columnName );
+				}
+			}
+		}
+		return null;
+	}
+
+	private String removeParenthesis( String sql )
+	{
+		sql = sql.trim( );
+		if ( sql.startsWith( "(" ) && sql.endsWith( ")" ) )
+			return sql.substring( 1, sql.length( ) - 1 );
+		return sql;
 	}
 
 	private String getColumnName( TResultColumn column, TTableList tables )
@@ -465,7 +634,7 @@ public class jooqConverter
 			case subquery_t :
 				break;
 			case simple_constant_t :
-				return "inline( " + getConstantExpression( expr ) + " )";
+				return "inline( " + getConstantExpression( expr, null ) + " )";
 			case function_t :
 				return getFunction( expr, tables );
 			default :
@@ -538,22 +707,46 @@ public class jooqConverter
 				columnName += "_";
 			}
 
-			return "((Field)" + tableName + "." + columnName + ")";
+			if ( metadata == null || ignoreGeneric )
+				return "((Field)" + tableName + "." + columnName + ")";
+			else
+				return tableName + "." + columnName;
 		}
 		else
 		{
 			TTable table = tables.getTable( 0 );
+			if ( metadata != null && tables.size( ) > 0 )
+			{
+				for ( int i = 1; i < tables.size( ); i++ )
+				{
+					TableMetaData tableMetaData = metadata.getTableMetaData( tables.getTable( i )
+							.getTableName( )
+							.toString( ) );
+					if ( tableMetaData != null )
+					{
+						ColumnMetaData columnMetaData = tableMetaData.getColumnMetaData( columnName );
+						if ( columnMetaData != null )
+						{
+							table = tables.getTable( i );
+							break;
+						}
+					}
+				}
+			}
 
 			if ( columnName.equalsIgnoreCase( table.getTableName( ).toString( ) ) )
 			{
 				columnName += "_";
 			}
 
-			return "((Field)"
-					+ getTableName( table )
-					+ "."
-					+ columnName.toUpperCase( )
-					+ ")";
+			if ( metadata == null || ignoreGeneric )
+				return "((Field)"
+						+ getTableName( table )
+						+ "."
+						+ columnName.toUpperCase( )
+						+ ")";
+			else
+				return getTableName( table ) + "." + columnName.toUpperCase( );
 		}
 	}
 
@@ -597,7 +790,7 @@ public class jooqConverter
 		return tableName;
 	}
 
-	private String getTableClassName( String table )
+	private String getTableJavaName( String table )
 	{
 		return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table ) );
 	}

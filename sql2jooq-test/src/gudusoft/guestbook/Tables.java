@@ -14,7 +14,12 @@ package gudusoft.guestbook;
 public class Tables {
 
 	/**
-	 * InnoDB free: 4096 kB
+	 * InnoDB free: 3072 kB
+	 */
+	public static final gudusoft.guestbook.tables.Mails MAILS = gudusoft.guestbook.tables.Mails.MAILS;
+
+	/**
+	 * InnoDB free: 3072 kB
 	 */
 	public static final gudusoft.guestbook.tables.Posts POSTS = gudusoft.guestbook.tables.Posts.POSTS;
 }

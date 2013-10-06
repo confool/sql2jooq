@@ -1,7 +1,7 @@
 
 package gudusoft.sql2jooq.guestbook;
 
-import gudusoft.guestbook.tables.Posts;
+import gudusoft.guestbook.tables.*;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,15 +17,12 @@ import org.jooq.impl.DSL;
 public class testGuestBook
 {
 
-	/**
-	 * @param args
-	 */
 	public static void main( String[] args )
 	{
 		Connection conn = null;
 
 		String userName = "root";
-		String password = "cnfree";
+		String password = "";
 		String url = "jdbc:mysql://localhost:3306/guestbook";
 
 		try
@@ -45,14 +42,12 @@ public class testGuestBook
 						+ id
 						+ " title: "
 						+ title
-						+ " desciption: "
+						+ " description: "
 						+ description );
 			}
 		}
 		catch ( Exception e )
 		{
-			// For the sake of this tutorial, let's keep exception handling
-			// simple
 			e.printStackTrace( );
 		}
 		finally
@@ -73,16 +68,15 @@ public class testGuestBook
 
 	private static Result getResultSet( Connection conn )
 	{
-		DSLContext create = DSL.using( conn, SQLDialect.MYSQL );
-		Posts a = Posts.POSTS.as( "a" );
-		Result result = create.select( )
-				.from( a )
-				.where( ( (Field) a.BODY ).equal( "Hello World" )
-						.and( ( (Field) a.ID ).equal( 1 ) ) )
-				.groupBy( ( (Field) a.BODY ), ( (Field) a.ID ) )
-				.having( DSL.count( ).greaterThan( 0 ) )
-				.orderBy( ( (Field) a.ID ) )
-				.fetch( );
+		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Posts a = Posts.POSTS.as("a");
+Mails b = Mails.MAILS.as("b");
+Result<org.jooq.Record4<java.lang.Long, java.lang.String, java.lang.String, java.lang.String>> result = create.select( b.ID, a.TITLE, a.BODY, b.ADDRESS )
+	.from( a, b )
+	.where( a.BODY.equal( java.lang.String.valueOf( "Hello World" ) ).and( a.TIMESTAMP.equal( java.sql.Timestamp.valueOf( "2003-10-01 00:24:08" ) ) ).and( a.ID.equal( java.lang.Long.valueOf( 1 ) ) ) )
+	.groupBy( a.BODY, a.ID )
+	.having( DSL.count(  ).greaterThan( 0 ) )
+	.orderBy( a.ID ).fetch( );
 
 		return result;
 	}

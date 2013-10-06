@@ -39,6 +39,7 @@ public class CodeGenerator
             	System.out.println("Generating code for : (" + id + ") " + query.replaceAll("[\\n\\r]+", "$0                             "));
 
                 jooqConverter convert = new jooqConverter( EDbVendor.dbvmysql, query );
+                convert.convert( true );
                 final String result = convert.getConvertResult( );
 
                 File templateFile = new File( "./xml/guestbook/SakilaTest.template.java" );
