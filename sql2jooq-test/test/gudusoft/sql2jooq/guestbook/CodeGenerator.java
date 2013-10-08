@@ -21,7 +21,7 @@ public class CodeGenerator
 	public static void main( String[] args ) throws Exception
 	{
 		String userName = "root";
-		String password = "cnfree";
+		String password = "";
 		String url = "jdbc:mysql://localhost:3306/guestbook";
 
 		Class.forName( "com.mysql.jdbc.Driver" ).newInstance( );
