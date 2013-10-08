@@ -11,8 +11,12 @@ LIMITED.
 
 INTRODUCTION
 
+gsp.jar(general sql parser) used in sql2jooq project can be deployed with
+sql2jooq project or any projects that include sql2jooq. For other projects,
+please check section 3 RESTRICTIONS.
+
 This is a legal agreement between you (either an individual or an entity), 
-the end-user, and GUDU SOFTWARE LIMITED(www.sqlparser.com) 
+the end-user, and GUDU SOFTWARE LIMITED(www.sqlparser.com). 
 
 LICENSE
 
@@ -20,7 +24,7 @@ LICENSE
 
 This License Agreement grants you the next:
 gsp.jar(general sql parser) may be used by developers inside an organization on
-one or more computers.
+one or more computers for any projects.
 
 
 2. COPYRIGHT
