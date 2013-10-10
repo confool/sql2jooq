@@ -6,6 +6,7 @@ import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
 import gudusoft.gsqlparser.nodes.TExpression;
+import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TFunctionCall;
 import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TGroupByItemList;
@@ -206,10 +207,14 @@ public class jooqConverter
 		{
 			convertResult.append( "Result result = create.select( " );
 		}
+		else if ( stmt.getResultColumnList( ).toString( ).trim( ).equals( "*" ) )
+		{
+			convertResult.append( "Result<Record> result = create.select( " );
+		}
 		else
 		{
 			TResultColumnList columns = stmt.getResultColumnList( );
-			convertResult.append( "Result<org.jooq.Record" )
+			convertResult.append( "Result<Record" )
 					.append( columns.size( ) )
 					.append( "<" );
 			for ( int i = 0; i < columns.size( ); i++ )
@@ -218,7 +223,16 @@ public class jooqConverter
 						.getExpr( ),
 						stmt ),
 						stmt );
-				convertResult.append( column.getJavaTypeClass( ) );
+				if ( column != null )
+				{
+					convertResult.append( getSimpleJavaClass( column.getJavaTypeClass( ) ) );
+				}
+				else
+				{
+					convertResult.append( getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( columns.getResultColumn( i )
+							.getExpr( ),
+							stmt ) ) ) );
+				}
 				if ( i < columns.size( ) - 1 )
 				{
 					convertResult.append( ", " );
@@ -241,7 +255,8 @@ public class jooqConverter
 					else
 					{
 						convertResult.append( getExpressionColumnName( column.getExpr( ),
-								tables ) );
+								tables,
+								null ) );
 						if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 						{
 							convertResult.append( ", " );
@@ -388,11 +403,22 @@ public class jooqConverter
 		convertResult.append( ".fetch( );\n" );
 	}
 
+	private String guessExpressionJavaTypeClass( String javaCode )
+	{
+		return Integer.class.getName( );
+	}
+
+	private String getExpressionJavaCode( TExpression expression,
+			TSelectSqlStatement stmt )
+	{
+		return getExpressionJavaCode( expression, stmt, null );
+	}
+
 	private String getTableName( TTable table )
 	{
 		if ( table.getName( ).equalsIgnoreCase( "DUAL" ) )
 		{
-			return "dual()";
+			return "DSL.dual()";
 		}
 		else if ( table.getAliasClause( ) != null )
 		{
@@ -417,64 +443,159 @@ public class jooqConverter
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
-			TCustomSqlStatement stmt )
-	{
-		StringBuffer buffer = new StringBuffer( );
-		switch ( expression.getExpressionType( ) )
-		{
-			case simple_comparison_t :
-				buffer.append( getComparisonExpressionJavaCode( expression,
-						stmt ) );
-				break;
-			case simple_object_name_t :
-				buffer.append( appendObjectNameExpression( expression, stmt ) );
-				break;
-			case logical_and_t :
-				buffer.append( appendLogicExpression( expression, stmt ) );
-				break;
-			case simple_constant_t :
-			{
-				String content = getConstantExpression( expression, null );
-				buffer.append( content );
-			}
-				break;
-			case function_t :
-				buffer.append( getFunction( expression, stmt.tables ) );
-				break;
-		}
-		return buffer.toString( );
-	}
-
-	private String getExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, ColumnMetaData column )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		switch ( expression.getExpressionType( ) )
 		{
+			case parenthesis_t :
+				buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+						stmt,
+						column ) );
+				break;
 			case simple_comparison_t :
 				buffer.append( getComparisonExpressionJavaCode( expression,
-						stmt ) );
+						stmt,
+						column ) );
 				break;
 			case simple_object_name_t :
-				buffer.append( appendObjectNameExpression( expression, stmt ) );
+				buffer.append( getObjectNameExpressionJavaCode( expression,
+						stmt ) );
 				break;
 			case logical_and_t :
-				buffer.append( appendLogicExpression( expression, stmt ) );
+				buffer.append( getLogicAndExpressionJavaCode( expression,
+						stmt,
+						column ) );
 				break;
 			case simple_constant_t :
-			{
-				String content = getConstantExpression( expression, column );
-				buffer.append( content );
-			}
+				buffer.append( "DSL.inline( "
+						+ getConstantExpressionJavaCode( expression, column )
+						+ " )" );
 				break;
 			case function_t :
-				buffer.append( getFunction( expression, stmt.tables ) );
+				buffer.append( getFunctionJavaCode( expression,
+						stmt.tables,
+						column ) );
 				break;
+			case logical_or_t :
+				buffer.append( getLogicOrExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case logical_not_t :
+				buffer.append( getLogicNotExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case bitwise_and_t :
+				buffer.append( getBitwiseAndExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case bitwise_or_t :
+				buffer.append( getBitwiseOrExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case bitwise_shift_left_t :
+				buffer.append( getBitwiseLeftShiftExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case bitwise_shift_right_t :
+				buffer.append( getBitwiseRightShiftExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case arithmetic_plus_t :
+				buffer.append( getArithmeticPlusExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case arithmetic_minus_t :
+				buffer.append( getArithmeticMinusExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case arithmetic_divide_t :
+				buffer.append( getArithmeticDivideExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case arithmetic_times_t :
+				buffer.append( getArithmeticTimesExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case arithmetic_modulo_t :
+				buffer.append( getArithmeticModuloExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case power_t :
+				buffer.append( getPowerExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case in_t :
+				buffer.append( getInExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case list_t :
+				buffer.append( getListExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			default :
+				throw new UnsupportedOperationException( "\r\nExpression: "
+						+ expression.toString( )
+						+ "\r\nDoesn't support the operation: "
+						+ expression.getExpressionType( ) );
 		}
 		return buffer.toString( );
 	}
 
-	private String getConstantExpression( TExpression expression,
+	private Object getListExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		TExpressionList exprList = expression.getExprList( );
+		StringBuffer buffer = new StringBuffer( );
+		for ( int i = 0; i < exprList.size( ); i++ )
+		{
+			buffer.append( getExpressionJavaCode( exprList.getExpression( i ),
+					stmt,
+					column ) );
+			if ( i < exprList.size( ) - 1 )
+			{
+				buffer.append( ", " );
+			}
+		}
+		return buffer.toString( );
+
+	}
+
+	private String getInExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
+	{
+		ColumnMetaData column = getColumnMetaDataBySql( expression.getLeftOperand( )
+				.toString( ),
+				stmt );
+		if ( column == null )
+		{
+			column = parentColumn;
+		}
+		if ( expression.getNotToken( ) != null )
+		{
+			return getLeftOperateRightJavaCode( "notIn", expression, stmt, column );
+		}
+		else
+		{
+			return getLeftOperateRightJavaCode( "in", expression, stmt, column );
+		}
+	}
+
+	private String getConstantExpressionJavaCode( TExpression expression,
 			ColumnMetaData column )
 	{
 		String content = expression.toString( );
@@ -486,89 +607,243 @@ public class jooqConverter
 		}
 		if ( column != null && !ignoreGeneric )
 		{
-			return column.getJavaTypeClass( ) + ".valueOf( " + content + " )";
+			if ( column.getJavaTypeClass( ).equals( "java.lang.Short" )
+					&& !( content.startsWith( "\"" ) && content.endsWith( "\"" ) ) )
+			{
+				content = "(short)" + content;
+			}
+			return getSimpleJavaClass( column.getJavaTypeClass( ) )
+					+ ".valueOf( "
+					+ content
+					+ " )";
 		}
 		return content;
 	}
 
-	private String appendLogicExpression( TExpression expression,
-			TCustomSqlStatement stmt )
+	private String getSimpleJavaClass( String javaTypeClass )
+	{
+		if ( javaTypeClass.startsWith( "java.lang." ) )
+		{
+			return javaTypeClass.replace( "java.lang.", "" );
+		}
+		return javaTypeClass;
+	}
+
+	private String getTwoArgmentsOperationJavaCode( String operation,
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
 	{
 		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "." ).append( operation ).append( "( " );
 		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
-				stmt ) );
-		buffer.append( ".and( " );
+				stmt,
+				column ) );
+		buffer.append( ", " );
 		buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
-				stmt ) );
+				stmt,
+				column ) );
 		buffer.append( " )" );
 		return buffer.toString( );
 	}
 
-	private String appendObjectNameExpression( TExpression expression,
+	private String getOneArgmentsOperationJavaCode( String operation,
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "." ).append( operation ).append( "( " );
+		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+				stmt,
+				column ) );
+		buffer.append( " )" );
+		return buffer.toString( );
+	}
+
+	private String getLeftOperateRightJavaCode( String operation,
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+				stmt,
+				column ) );
+		buffer.append( "." ).append( operation ).append( "( " );
+		buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
+				stmt,
+				column ) );
+		buffer.append( " )" );
+		return buffer.toString( );
+	}
+
+	private String getPowerExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "power",
+				expression,
+				stmt,
+				column );
+	}
+
+	private String getArithmeticModuloExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "mod", expression, stmt, column );
+	}
+
+	private String getArithmeticTimesExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "mul", expression, stmt, column );
+	}
+
+	private String getArithmeticDivideExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "div", expression, stmt, column );
+	}
+
+	private String getArithmeticMinusExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "sub", expression, stmt, column );
+	}
+
+	private String getArithmeticPlusExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "add", expression, stmt, column );
+	}
+
+	private String getBitwiseAndExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "bitAnd",
+				expression,
+				stmt,
+				column );
+	}
+
+	private String getBitwiseOrExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "bitOr",
+				expression,
+				stmt,
+				column );
+	}
+
+	private String getBitwiseLeftShiftExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "shl", expression, stmt, column );
+	}
+
+	private String getBitwiseRightShiftExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "shr", expression, stmt, column );
+	}
+
+	private String getLogicAndExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "and", expression, stmt, column );
+	}
+
+	private String getLogicOrExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "or", expression, stmt, column );
+	}
+
+	private String getLogicNotExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getOneArgmentsOperationJavaCode( "not", expression, stmt, column );
+	}
+
+	private String getObjectNameExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt )
 	{
 		return getObjectColumnName( expression.toString( ), stmt.tables );
-
 	}
 
 	private String getComparisonExpressionJavaCode( TExpression expr,
-			TCustomSqlStatement stmt )
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		if ( expr.getComparisonOperator( ).tokencode == (int) '=' )
 		{
-			String left = getExpressionJavaCode( expr.getLeftOperand( ), stmt );
-			buffer.append( left );
-			buffer.append( ".equal( " );
-			ColumnMetaData column = getColumnMetaDataBySql( left, stmt );
-			if ( column != null )
-			{
-				buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
-						stmt,
-						column ) );
-			}
-			else
-			{
-				buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
-						stmt ) );
-			}
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "equal",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.not_equal )
 		{
-			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
-			buffer.append( ".notEqual( " );
-			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "notEqual",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == (int) '>' )
 		{
-			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
-			buffer.append( ".greaterThan( " );
-			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "greaterThan",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == (int) '<' )
 		{
-			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
-			buffer.append( ".lessThan( " );
-			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "lessThan",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.less_equal )
 		{
-			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
-			buffer.append( ".lessOrEqual( " );
-			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "lessOrEqual",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
 		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.great_equal )
 		{
-			buffer.append( getExpressionJavaCode( expr.getLeftOperand( ), stmt ) );
-			buffer.append( ".greaterOrEqual( " );
-			buffer.append( getExpressionJavaCode( expr.getRightOperand( ), stmt ) );
-			buffer.append( " )" );
+			buffer.append( getComparisonOperationJavaCode( "greaterOrEqual",
+					expr,
+					stmt,
+					parentColumn ) );
 		}
+		return buffer.toString( );
+	}
+
+	private String getComparisonOperationJavaCode( String operation,
+			TExpression expr, TCustomSqlStatement stmt,
+			ColumnMetaData parentColumn )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		String left = getExpressionJavaCode( expr.getLeftOperand( ),
+				stmt,
+				parentColumn );
+		buffer.append( left );
+		buffer.append( "." + operation + "( " );
+		ColumnMetaData column = getColumnMetaDataBySql( left, stmt );
+		if ( column == null )
+		{
+			column = parentColumn;
+		}
+
+		buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
+				stmt,
+				column ) );
+
+		buffer.append( " )" );
 		return buffer.toString( );
 	}
 
@@ -622,10 +897,11 @@ public class jooqConverter
 
 	private String getColumnName( TResultColumn column, TTableList tables )
 	{
-		return getExpressionColumnName( column.getExpr( ), tables );
+		return getExpressionColumnName( column.getExpr( ), tables, null );
 	}
 
-	private String getExpressionColumnName( TExpression expr, TTableList tables )
+	private String getExpressionColumnName( TExpression expr,
+			TTableList tables, ColumnMetaData column )
 	{
 		switch ( expr.getExpressionType( ) )
 		{
@@ -634,16 +910,19 @@ public class jooqConverter
 			case subquery_t :
 				break;
 			case simple_constant_t :
-				return "inline( " + getConstantExpression( expr, null ) + " )";
+				return "DSL.inline( "
+						+ getConstantExpressionJavaCode( expr, column )
+						+ " )";
 			case function_t :
-				return getFunction( expr, tables );
+				return getFunctionJavaCode( expr, tables, column );
 			default :
 				break;
 		}
 		return "";
 	}
 
-	private String getFunction( TExpression expression, TTableList tables )
+	private String getFunctionJavaCode( TExpression expression,
+			TTableList tables, ColumnMetaData column )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		TFunctionCall function = expression.getFunctionCall( );
@@ -674,7 +953,7 @@ public class jooqConverter
 			}
 			else
 			{
-				buffer.append( getExpressionColumnName( arg, tables ) );
+				buffer.append( getExpressionColumnName( arg, tables, column ) );
 				if ( i < function.getArgs( ).size( ) - 1 )
 				{
 					buffer.append( ", " );
