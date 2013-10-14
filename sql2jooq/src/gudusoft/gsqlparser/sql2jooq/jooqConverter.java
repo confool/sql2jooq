@@ -547,6 +547,30 @@ public class jooqConverter
 						stmt,
 						column ) );
 				break;
+			case null_t :
+				buffer.append( getNullExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case between_t :
+				buffer.append( getBetweenExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case pattern_matching_t :
+				buffer.append( getLikeExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
+			case unary_minus_t :
+				buffer.append( getUnaryMinusExpressionJavaCode( expression,
+						stmt,
+						column ) );
+			case unary_plus_t :
+				buffer.append( getUnaryPlusExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
 			default :
 				throw new UnsupportedOperationException( "\r\nExpression: "
 						+ expression.toString( )
@@ -556,7 +580,7 @@ public class jooqConverter
 		return buffer.toString( );
 	}
 
-	private Object getListExpressionJavaCode( TExpression expression,
+	private String getListExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, ColumnMetaData column )
 	{
 		TExpressionList exprList = expression.getExprList( );
@@ -575,6 +599,70 @@ public class jooqConverter
 
 	}
 
+	private String getNullExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
+	{
+		ColumnMetaData column = getColumnMetaDataBySql( expression.getLeftOperand( )
+				.toString( ),
+				stmt );
+		if ( column == null )
+		{
+			column = parentColumn;
+		}
+		if ( expression.getNotToken( ) != null )
+		{
+			return getLeftOperateRightJavaCode( "isNotNull",
+					expression,
+					stmt,
+					column );
+		}
+		else
+		{
+			return getLeftOperateRightJavaCode( "isNull",
+					expression,
+					stmt,
+					column );
+		}
+	}
+
+	private String getBetweenExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
+	{
+		ColumnMetaData column = getColumnMetaDataBySql( expression.getLeftOperand( )
+				.toString( ),
+				stmt );
+		if ( column == null )
+		{
+			column = parentColumn;
+		}
+		if ( expression.getNotToken( ) != null )
+		{
+			return getLeftOperateRightJavaCode( "notBetween",
+					stmt,
+					column,
+					expression.getBetweenOperand( ),
+					expression.getLeftOperand( ) )
+					+ getOneArgmentsOperationJavaCode( "and",
+							expression.getRightOperand( ),
+							stmt,
+							column,
+							true );
+		}
+		else
+		{
+			return getLeftOperateRightJavaCode( "between",
+					stmt,
+					column,
+					expression.getBetweenOperand( ),
+					expression.getLeftOperand( ) )
+					+ getOneArgmentsOperationJavaCode( "and",
+							expression.getRightOperand( ),
+							stmt,
+							column,
+							true );
+		}
+	}
+
 	private String getInExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
 	{
@@ -587,12 +675,105 @@ public class jooqConverter
 		}
 		if ( expression.getNotToken( ) != null )
 		{
-			return getLeftOperateRightJavaCode( "notIn", expression, stmt, column );
+			return getLeftOperateRightJavaCode( "notIn",
+					expression,
+					stmt,
+					column );
 		}
 		else
 		{
 			return getLeftOperateRightJavaCode( "in", expression, stmt, column );
 		}
+	}
+
+	private String getLikeExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
+	{
+		ColumnMetaData column = getColumnMetaDataBySql( expression.getLeftOperand( )
+				.toString( ),
+				stmt );
+		if ( column == null )
+		{
+			column = parentColumn;
+		}
+
+		String operation = null;
+		if ( expression.getNotToken( ) == null )
+		{
+			if ( expression.getOperatorToken( )
+					.toString( )
+					.equalsIgnoreCase( "REGEXP" ) )
+			{
+				operation = "likeRegex";
+			}
+			else
+			{
+				operation = "like";
+
+			}
+		}
+		else
+		{
+			if ( expression.getOperatorToken( )
+					.toString( )
+					.equalsIgnoreCase( "REGEXP" ) )
+			{
+				operation = "notLikeRegex";
+			}
+			else
+			{
+				operation = "notLike";
+			}
+		}
+
+		if ( expression.getLikeEscapeOperand( ) == null )
+		{
+			if ( expression.getNotToken( ) != null )
+			{
+				return getLeftOperateRightJavaCode( operation,
+						expression,
+						stmt,
+						column );
+			}
+			else
+			{
+				return getLeftOperateRightJavaCode( operation,
+						expression,
+						stmt,
+						column );
+			}
+		}
+		else
+		{
+			if ( expression.getNotToken( ) != null )
+			{
+				return getLeftOperateRightJavaCode( operation,
+						stmt,
+						column,
+						expression.getLeftOperand( ),
+						expression.getRightOperand( ),
+						convertStringToChar( expression.getLikeEscapeOperand( ) ) );
+			}
+			else
+			{
+				return getLeftOperateRightJavaCode( operation,
+						stmt,
+						column,
+						expression.getLeftOperand( ),
+						expression.getRightOperand( ),
+						convertStringToChar( expression.getLikeEscapeOperand( ) ) );
+			}
+		}
+	}
+
+	private String convertStringToChar( TExpression expression )
+	{
+		String content = expression.toString( ).trim( );
+		if ( content.startsWith( "'" ) && content.endsWith( "'" ) )
+		{
+			content = content.substring( 1, content.length( ) - 1 );
+		}
+		return "'" + content.charAt( 0 ) + "'";
 	}
 
 	private String getConstantExpressionJavaCode( TExpression expression,
@@ -629,6 +810,23 @@ public class jooqConverter
 		return javaTypeClass;
 	}
 
+	private String getUnaryMinusExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getLeftOperateRightJavaCode( "neg",
+				stmt,
+				column,
+				expression.getRightOperand( ) );
+	}
+
+	private String getUnaryPlusExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getExpressionJavaCode( expression.getRightOperand( ),
+				stmt,
+				column );
+	}
+
 	private String getTwoArgmentsOperationJavaCode( String operation,
 			TExpression expression, TCustomSqlStatement stmt,
 			ColumnMetaData column )
@@ -648,15 +846,25 @@ public class jooqConverter
 
 	private String getOneArgmentsOperationJavaCode( String operation,
 			TExpression expression, TCustomSqlStatement stmt,
-			ColumnMetaData column )
+			ColumnMetaData column, boolean useExpressionSelf )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		buffer.append( "." ).append( operation ).append( "( " );
-		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
-				stmt,
-				column ) );
+		buffer.append( getExpressionJavaCode( useExpressionSelf ? expression
+				: expression.getLeftOperand( ), stmt, column ) );
 		buffer.append( " )" );
 		return buffer.toString( );
+	}
+
+	private String getOneArgmentsOperationJavaCode( String operation,
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return getOneArgmentsOperationJavaCode( operation,
+				expression,
+				stmt,
+				column,
+				false );
 	}
 
 	private String getLeftOperateRightJavaCode( String operation,
@@ -668,9 +876,43 @@ public class jooqConverter
 				stmt,
 				column ) );
 		buffer.append( "." ).append( operation ).append( "( " );
-		buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
-				stmt,
-				column ) );
+		if ( expression.getRightOperand( ) != null )
+		{
+			buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
+					stmt,
+					column ) );
+		}
+		buffer.append( " )" );
+		return buffer.toString( );
+	}
+
+	private String getLeftOperateRightJavaCode( String operation,
+			TCustomSqlStatement stmt, ColumnMetaData column,
+			TExpression leftExpression, Object... rightExpressions )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( getExpressionJavaCode( leftExpression, stmt, column ) );
+		buffer.append( "." ).append( operation ).append( "( " );
+		if ( rightExpressions != null )
+		{
+			for ( int i = 0; i < rightExpressions.length; i++ )
+			{
+				if ( rightExpressions[i] instanceof TExpression )
+				{
+					buffer.append( getExpressionJavaCode( (TExpression) rightExpressions[i],
+							stmt,
+							column ) );
+				}
+				else if ( rightExpressions[i] instanceof String )
+				{
+					buffer.append( rightExpressions[i].toString( ) );
+				}
+				if ( i < rightExpressions.length - 1 )
+				{
+					buffer.append( ", " );
+				}
+			}
+		}
 		buffer.append( " )" );
 		return buffer.toString( );
 	}
