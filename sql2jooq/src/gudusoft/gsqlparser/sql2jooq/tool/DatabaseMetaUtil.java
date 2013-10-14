@@ -10,7 +10,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DatabaseMetaUtil
@@ -88,7 +90,74 @@ public class DatabaseMetaUtil
 		return databaseMetaData;
 	}
 
-	public static String getDataTypeClassName( int sqlType ) throws SQLException
+	public static String getSimpleJavaClass( String javaTypeClass )
+	{
+		if ( javaTypeClass.startsWith( "java.lang." ) )
+		{
+			return javaTypeClass.replace( "java.lang.", "" );
+		}
+		return javaTypeClass;
+	}
+
+	private static List<String> clazzes;
+
+	public static List<String> getDataTypeClassNames( )
+	{
+		if ( clazzes == null )
+		{
+			clazzes = new ArrayList<String>( );
+			String className = ( new java.math.BigDecimal( 0 ) ).getClass( )
+					.getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Boolean( false ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Byte( "0" ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Short( "0" ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Integer( 0 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Long( 0 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Float( 0 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new Double( 0 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			byte[] b = {};
+			className = ( b.getClass( ) ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new java.sql.Date( 123456 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new java.sql.Time( 123456 ) ).getClass( ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			className = ( new java.sql.Timestamp( 123456 ) ).getClass( )
+					.getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			byte[] blob = {};
+			className = ( blob.getClass( ) ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+
+			char[] c = {};
+			className = ( c.getClass( ) ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
+		}
+
+		return clazzes;
+	}
+
+	public static String getDataTypeClassName( int sqlType )
 	{
 		String className = ( new String( ) ).getClass( ).getName( );
 

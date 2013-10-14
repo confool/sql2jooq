@@ -6,6 +6,7 @@ import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
+import gudusoft.gsqlparser.nodes.TCaseExpression;
 import gudusoft.gsqlparser.nodes.TExpression;
 import gudusoft.gsqlparser.nodes.TExpressionList;
 import gudusoft.gsqlparser.nodes.TFunctionCall;
@@ -19,9 +20,12 @@ import gudusoft.gsqlparser.nodes.TResultColumn;
 import gudusoft.gsqlparser.nodes.TResultColumnList;
 import gudusoft.gsqlparser.nodes.TTable;
 import gudusoft.gsqlparser.nodes.TTableList;
+import gudusoft.gsqlparser.nodes.TWhenClauseItem;
+import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.sql2jooq.db.ColumnMetaData;
 import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
 import gudusoft.gsqlparser.sql2jooq.db.TableMetaData;
+import gudusoft.gsqlparser.sql2jooq.tool.DatabaseMetaUtil;
 import gudusoft.gsqlparser.sql2jooq.tool.GenerationUtil;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
 import gudusoft.gsqlparser.stmt.TInsertSqlStatement;
@@ -30,6 +34,9 @@ import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jooq.tools.StringUtils;
 
@@ -226,11 +233,11 @@ public class jooqConverter
 						stmt );
 				if ( column != null )
 				{
-					convertResult.append( getSimpleJavaClass( column.getJavaTypeClass( ) ) );
+					convertResult.append( DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) ) );
 				}
 				else
 				{
-					convertResult.append( getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( columns.getResultColumn( i )
+					convertResult.append( DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( columns.getResultColumn( i )
 							.getExpr( ),
 							stmt ) ) ) );
 				}
@@ -266,7 +273,14 @@ public class jooqConverter
 				}
 				else
 				{
-					convertResult.append( getColumnName( column, tables ) );
+					String columnName = getColumnName( column, tables );
+					if ( columnName == null
+							|| columnName.trim( ).length( ) == 0 )
+					{
+						columnName = getExpressionJavaCode( column.getExpr( ),
+								stmt );
+					}
+					convertResult.append( columnName );
 					if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 					{
 						convertResult.append( ", " );
@@ -406,7 +420,27 @@ public class jooqConverter
 
 	private String guessExpressionJavaTypeClass( String javaCode )
 	{
-		return Integer.class.getName( );
+		List<String> javaClasses = DatabaseMetaUtil.getDataTypeClassNames( );
+		for ( int i = 0; i < javaClasses.size( ); i++ )
+		{
+			String className = javaClasses.get( i );
+			if ( javaCode.indexOf( className ) != -1 )
+				return className;
+		}
+		if ( javaCode.toLowerCase( ).indexOf( "DSL.count".toLowerCase( ) ) != -1 )
+			return Integer.class.getName( );
+
+		Pattern pattern = Pattern.compile( "\".+?\"" );
+		Matcher matcher = pattern.matcher( javaCode );
+		if ( matcher.find( ) )
+			return String.class.getName( );
+
+		pattern = Pattern.compile( "\\d+" );
+		matcher = pattern.matcher( javaCode );
+		if ( matcher.find( ) )
+			return Integer.class.getName( );
+		
+		return String.class.getName( );
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
@@ -591,11 +625,67 @@ public class jooqConverter
 						stmt,
 						column ) );
 				break;
+			case case_t :
+				buffer.append( getCaseExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
 			default :
 				throw new UnsupportedOperationException( "\r\nExpression: "
 						+ expression.toString( )
 						+ "\r\nDoesn't support the operation: "
 						+ expression.getExpressionType( ) );
+		}
+		return buffer.toString( );
+	}
+
+	private String getCaseExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		TCaseExpression caseExpr = expression.getCaseExpression( );
+		TExpression inputExpr = caseExpr.getInput_expr( );
+		TExpression defaultExpr = caseExpr.getElse_expr( );
+		TWhenClauseItemList whenItems = caseExpr.getWhenClauseItemList( );
+
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "DSL.decode( )" );
+		if ( inputExpr != null )
+		{
+			buffer.append( getOneArgmentsOperationJavaCode( "value",
+					inputExpr,
+					stmt,
+					column,
+					true ) );
+		}
+		if ( whenItems != null )
+		{
+			for ( int i = 0; i < whenItems.size( ); i++ )
+			{
+				TWhenClauseItem item = whenItems.getWhenClauseItem( i );
+				buffer.append( ".when( " );
+				if ( item.getComparison_expr( ) != null )
+				{
+					buffer.append( getExpressionJavaCode( item.getComparison_expr( ),
+							stmt,
+							column ) );
+				}
+				buffer.append( ", " );
+				if ( item.getReturn_expr( ) != null )
+				{
+					buffer.append( getExpressionJavaCode( item.getComparison_expr( ),
+							stmt,
+							column ) );
+				}
+				buffer.append( " )" );
+			}
+		}
+		if ( defaultExpr != null )
+		{
+			buffer.append( getOneArgmentsOperationJavaCode( "otherwise",
+					defaultExpr,
+					stmt,
+					column,
+					true ) );
 		}
 		return buffer.toString( );
 	}
@@ -825,21 +915,12 @@ public class jooqConverter
 			{
 				content = "(short)" + content;
 			}
-			return getSimpleJavaClass( column.getJavaTypeClass( ) )
+			return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) )
 					+ ".valueOf( "
 					+ content
 					+ " )";
 		}
 		return content;
-	}
-
-	private String getSimpleJavaClass( String javaTypeClass )
-	{
-		if ( javaTypeClass.startsWith( "java.lang." ) )
-		{
-			return javaTypeClass.replace( "java.lang.", "" );
-		}
-		return javaTypeClass;
 	}
 
 	private String getUnaryMinusExpressionJavaCode( TExpression expression,
