@@ -2,6 +2,7 @@
 package gudusoft.gsqlparser.sql2jooq;
 
 import gudusoft.gsqlparser.EDbVendor;
+import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -443,8 +444,22 @@ public class jooqConverter
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
-			TCustomSqlStatement stmt, ColumnMetaData column )
+			TCustomSqlStatement stmt, Object columnInfo )
 	{
+		ColumnMetaData column = null;
+		ColumnMetaData[] columns = null;
+		if ( columnInfo instanceof ColumnMetaData )
+		{
+			column = (ColumnMetaData) columnInfo;
+			columns = new ColumnMetaData[]{
+				column
+			};
+		}
+		else if ( columnInfo instanceof ColumnMetaData[] )
+		{
+			columns = (ColumnMetaData[]) columnInfo;
+			column = columns[0];
+		}
 		StringBuffer buffer = new StringBuffer( );
 		switch ( expression.getExpressionType( ) )
 		{
@@ -475,7 +490,7 @@ public class jooqConverter
 			case function_t :
 				buffer.append( getFunctionJavaCode( expression,
 						stmt.tables,
-						column ) );
+						columns ) );
 				break;
 			case logical_or_t :
 				buffer.append( getLogicOrExpressionJavaCode( expression,
@@ -545,7 +560,7 @@ public class jooqConverter
 			case list_t :
 				buffer.append( getListExpressionJavaCode( expression,
 						stmt,
-						column ) );
+						columns ) );
 				break;
 			case null_t :
 				buffer.append( getNullExpressionJavaCode( expression,
@@ -571,6 +586,11 @@ public class jooqConverter
 						stmt,
 						column ) );
 				break;
+			case group_comparison_t :
+				buffer.append( getGroupComparisonExpressionJavaCode( expression,
+						stmt,
+						column ) );
+				break;
 			default :
 				throw new UnsupportedOperationException( "\r\nExpression: "
 						+ expression.toString( )
@@ -581,12 +601,24 @@ public class jooqConverter
 	}
 
 	private String getListExpressionJavaCode( TExpression expression,
-			TCustomSqlStatement stmt, ColumnMetaData column )
+			TCustomSqlStatement stmt, ColumnMetaData[] columns )
 	{
 		TExpressionList exprList = expression.getExprList( );
 		StringBuffer buffer = new StringBuffer( );
 		for ( int i = 0; i < exprList.size( ); i++ )
 		{
+			ColumnMetaData column = null;
+			if ( columns != null )
+			{
+				if ( columns.length > i )
+				{
+					column = columns[i];
+				}
+				else if ( columns.length >= 1 )
+				{
+					column = columns[0];
+				}
+			}
 			buffer.append( getExpressionJavaCode( exprList.getExpression( i ),
 					stmt,
 					column ) );
@@ -1065,6 +1097,82 @@ public class jooqConverter
 		return buffer.toString( );
 	}
 
+	private String getGroupComparisonExpressionJavaCode( TExpression expr,
+			TCustomSqlStatement stmt, ColumnMetaData parentColumn )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		if ( expr.getComparisonOperator( ).tokencode == (int) '=' )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "equal",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.not_equal )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "notEqual",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		else if ( expr.getComparisonOperator( ).tokencode == (int) '>' )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "greaterThan",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		else if ( expr.getComparisonOperator( ).tokencode == (int) '<' )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "lessThan",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.less_equal )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "lessOrEqual",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		else if ( expr.getComparisonOperator( ).tokencode == TBaseType.great_equal )
+		{
+			buffer.append( getGroupComparisonOperationJavaCode( "greaterOrEqual",
+					expr,
+					stmt,
+					parentColumn ) );
+		}
+		return buffer.toString( );
+	}
+
+	private Object getGroupComparisonOperationJavaCode( String operation,
+			TExpression expr, TCustomSqlStatement stmt,
+			ColumnMetaData parentColumn )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		String left = "DSL.row( "
+				+ getExpressionJavaCode( expr.getLeftOperand( ),
+						stmt,
+						parentColumn );
+		buffer.append( left );
+		buffer.append( " )." + operation + "( " );
+		ColumnMetaData[] columns = getColumnMetaDatasBySql( left, stmt );
+		if ( columns == null )
+		{
+			columns = new ColumnMetaData[]{
+				parentColumn
+			};
+		}
+
+		buffer.append( "DSL.row( "
+				+ getExpressionJavaCode( expr.getRightOperand( ), stmt, columns )
+				+ " )" );
+
+		buffer.append( " )" );
+		return buffer.toString( );
+	}
+
 	private String getComparisonOperationJavaCode( String operation,
 			TExpression expr, TCustomSqlStatement stmt,
 			ColumnMetaData parentColumn )
@@ -1075,7 +1183,23 @@ public class jooqConverter
 				parentColumn );
 		buffer.append( left );
 		buffer.append( "." + operation + "( " );
-		ColumnMetaData column = getColumnMetaDataBySql( left, stmt );
+		Object column = null;
+		if ( expr.getLeftOperand( ).getExpressionType( ) == EExpressionType.function_t
+				&& expr.getLeftOperand( )
+						.getFunctionCall( )
+						.getFunctionName( )
+						.toString( )
+						.equalsIgnoreCase( "row" ) )
+		{
+			column = getColumnMetaDatasBySql( expr.getLeftOperand( )
+					.getFunctionCall( )
+					.getArgs( )
+					.toString( ), stmt );
+		}
+		else
+		{
+			column = getColumnMetaDataBySql( left, stmt );
+		}
 		if ( column == null )
 		{
 			column = parentColumn;
@@ -1129,6 +1253,50 @@ public class jooqConverter
 		return null;
 	}
 
+	private ColumnMetaData[] getColumnMetaDatasBySql( String sql,
+			TCustomSqlStatement stmt )
+	{
+		if ( metadata == null )
+			return null;
+		String[] splits = sql.split( "," );
+		ColumnMetaData[] metaDatas = new ColumnMetaData[splits.length];
+		for ( int i = 0; i < splits.length; i++ )
+		{
+			String content = removeParenthesis( splits[i] );
+			int index = content.lastIndexOf( '.' );
+			String columnName = content;
+			if ( index != -1 )
+			{
+				columnName = content.substring( index + 1 );
+			}
+			if ( columnName.endsWith( "_" ) )
+			{
+				columnName = columnName.substring( 0, columnName.length( ) - 1 );
+			}
+			if ( index != -1 )
+			{
+				content = content.substring( 0, index );
+				String tableName = content;
+				index = content.lastIndexOf( '.' );
+				if ( index != -1 )
+				{
+					tableName = content.substring( index + 1 );
+				}
+				TTable table = getTableFromName( tableName, stmt.tables );
+				if ( table != null )
+				{
+					TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
+							.toString( ) );
+					if ( tableMetaData != null )
+					{
+						metaDatas[i] = tableMetaData.getColumnMetaData( columnName );
+					}
+				}
+			}
+		}
+		return metaDatas;
+	}
+
 	private String removeParenthesis( String sql )
 	{
 		sql = sql.trim( );
@@ -1143,8 +1311,22 @@ public class jooqConverter
 	}
 
 	private String getExpressionColumnName( TExpression expr,
-			TTableList tables, ColumnMetaData column )
+			TTableList tables, Object columnInfo )
 	{
+		ColumnMetaData column = null;
+		ColumnMetaData[] columns = null;
+		if ( columnInfo instanceof ColumnMetaData )
+		{
+			column = (ColumnMetaData) columnInfo;
+			columns = new ColumnMetaData[]{
+				column
+			};
+		}
+		else if ( columnInfo instanceof ColumnMetaData[] )
+		{
+			columns = (ColumnMetaData[]) columnInfo;
+			column = columns[0];
+		}
 		switch ( expr.getExpressionType( ) )
 		{
 			case simple_object_name_t :
@@ -1156,7 +1338,7 @@ public class jooqConverter
 						+ getConstantExpressionJavaCode( expr, column )
 						+ " )";
 			case function_t :
-				return getFunctionJavaCode( expr, tables, column );
+				return getFunctionJavaCode( expr, tables, columns );
 			default :
 				break;
 		}
@@ -1164,7 +1346,7 @@ public class jooqConverter
 	}
 
 	private String getFunctionJavaCode( TExpression expression,
-			TTableList tables, ColumnMetaData column )
+			TTableList tables, ColumnMetaData[] columns )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		TFunctionCall function = expression.getFunctionCall( );
@@ -1195,6 +1377,18 @@ public class jooqConverter
 			}
 			else
 			{
+				ColumnMetaData column = null;
+				if ( columns != null )
+				{
+					if ( columns.length > i )
+					{
+						column = columns[i];
+					}
+					else if ( columns.length >= 1 )
+					{
+						column = columns[0];
+					}
+				}
 				buffer.append( getExpressionColumnName( arg, tables, column ) );
 				if ( i < function.getArgs( ).size( ) - 1 )
 				{
