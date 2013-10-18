@@ -652,14 +652,16 @@ public class jooqConverter
 
 	private String getExistsExpressionJavaCode( TExpression expression )
 	{
-		return getOperateSubqueryJavaCode( "exists", expression.getSubQuery( ) );
+		return "DSL"
+				+ getOperateSubqueryJavaCode( "exists",
+						expression.getSubQuery( ) );
 	}
 
 	private String getOperateSubqueryJavaCode( String operation,
 			TSelectSqlStatement subquery )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( "DSL." ).append( operation ).append( "( " );
+		buffer.append( "." ).append( operation ).append( "( " );
 		buffer.append( getQueryJavaCode( subquery ) );
 		buffer.append( " )" );
 		return buffer.toString( );
@@ -988,7 +990,7 @@ public class jooqConverter
 			ColumnMetaData column, boolean useExpressionSelf )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( "DSL." ).append( operation ).append( "( " );
+		buffer.append( "." ).append( operation ).append( "( " );
 		buffer.append( getExpressionJavaCode( useExpressionSelf ? expression
 				: expression.getLeftOperand( ), stmt, column ) );
 		buffer.append( " )" );
@@ -1135,11 +1137,12 @@ public class jooqConverter
 	private String getLogicNotExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, ColumnMetaData column )
 	{
-		return getOneArgmentsOperationJavaCode( "not",
-				expression.getRightOperand( ),
-				stmt,
-				column,
-				true );
+		return "DSL"
+				+ getOneArgmentsOperationJavaCode( "not",
+						expression.getRightOperand( ),
+						stmt,
+						column,
+						true );
 	}
 
 	private String getObjectNameExpressionJavaCode( TExpression expression,
