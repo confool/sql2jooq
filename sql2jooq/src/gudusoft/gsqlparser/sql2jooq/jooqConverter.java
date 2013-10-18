@@ -213,11 +213,11 @@ public class jooqConverter
 				|| stmt.getResultColumnList( ) == null
 				|| ignoreGeneric )
 		{
-			convertResult.append( "Result result = create.select( " );
+			convertResult.append( "Result result = " );
 		}
 		else if ( stmt.getResultColumnList( ).toString( ).trim( ).equals( "*" ) )
 		{
-			convertResult.append( "Result<Record> result = create.select( " );
+			convertResult.append( "Result<Record> result = " );
 		}
 		else
 		{
@@ -246,8 +246,17 @@ public class jooqConverter
 					convertResult.append( ", " );
 				}
 			}
-			convertResult.append( ">> result = create.select( " );
+			convertResult.append( ">> result = " );
 		}
+
+		convertResult.append( getQueryJavaCode( stmt ) );
+		convertResult.append( ".fetch( );\n" );
+	}
+
+	private String getQueryJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer convertResult = new StringBuffer( );
+		convertResult.append( "create.select( " );
 		if ( stmt.getResultColumnList( ) != null )
 		{
 			for ( int i = 0; i < stmt.getResultColumnList( ).size( ); i++ )
@@ -263,7 +272,7 @@ public class jooqConverter
 					else
 					{
 						convertResult.append( getExpressionColumnName( column.getExpr( ),
-								tables,
+								stmt.tables,
 								null ) );
 						if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 						{
@@ -273,7 +282,7 @@ public class jooqConverter
 				}
 				else
 				{
-					String columnName = getColumnName( column, tables );
+					String columnName = getColumnName( column, stmt.tables );
 					if ( columnName == null
 							|| columnName.trim( ).length( ) == 0 )
 					{
@@ -299,7 +308,8 @@ public class jooqConverter
 			for ( int i = 0; i < stmt.joins.size( ); i++ )
 			{
 				TJoin join = stmt.joins.getJoin( i );
-				appendTable( join.getTable( ) );
+
+				convertResult.append( getTableName( join.getTable( ) ) );
 
 				if ( join.getJoinItems( ) != null
 						&& join.getJoinItems( ).size( ) > 0 )
@@ -315,7 +325,7 @@ public class jooqConverter
 						TJoinItem joinItem = join.getJoinItems( )
 								.getJoinItem( j );
 						convertResult.append( ".join( " );
-						appendTable( joinItem.getTable( ) );
+						convertResult.append( getTableName( joinItem.getTable( ) ) );
 						convertResult.append( " ).on( " );
 						convertResult.append( getExpressionJavaCode( joinItem.getOnCondition( ),
 								stmt ) );
@@ -415,7 +425,7 @@ public class jooqConverter
 		{
 			convertResult.delete( index, convertResult.length( ) );
 		}
-		convertResult.append( ".fetch( );\n" );
+		return convertResult.toString( );
 	}
 
 	private String guessExpressionJavaTypeClass( String javaCode )
@@ -439,7 +449,7 @@ public class jooqConverter
 		matcher = pattern.matcher( javaCode );
 		if ( matcher.find( ) )
 			return Integer.class.getName( );
-		
+
 		return String.class.getName( );
 	}
 
@@ -470,11 +480,6 @@ public class jooqConverter
 		return getTableJavaName( table.getTableName( ).toString( ) )
 				+ "."
 				+ table.getTableName( ).toString( ).toUpperCase( );
-	}
-
-	private void appendTable( TTable table )
-	{
-		convertResult.append( getTableName( table ) );
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
@@ -630,12 +635,33 @@ public class jooqConverter
 						stmt,
 						column ) );
 				break;
+			case exists_t :
+				buffer.append( getExistsExpressionJavaCode( expression ) );
+				break;
+			case subquery_t :
+				buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
+				break;
 			default :
 				throw new UnsupportedOperationException( "\r\nExpression: "
 						+ expression.toString( )
 						+ "\r\nDoesn't support the operation: "
 						+ expression.getExpressionType( ) );
 		}
+		return buffer.toString( );
+	}
+
+	private String getExistsExpressionJavaCode( TExpression expression )
+	{
+		return getOperateSubqueryJavaCode( "exists", expression.getSubQuery( ) );
+	}
+
+	private String getOperateSubqueryJavaCode( String operation,
+			TSelectSqlStatement subquery )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "DSL." ).append( operation ).append( "( " );
+		buffer.append( getQueryJavaCode( subquery ) );
+		buffer.append( " )" );
 		return buffer.toString( );
 	}
 
@@ -962,22 +988,11 @@ public class jooqConverter
 			ColumnMetaData column, boolean useExpressionSelf )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( "." ).append( operation ).append( "( " );
+		buffer.append( "DSL." ).append( operation ).append( "( " );
 		buffer.append( getExpressionJavaCode( useExpressionSelf ? expression
 				: expression.getLeftOperand( ), stmt, column ) );
 		buffer.append( " )" );
 		return buffer.toString( );
-	}
-
-	private String getOneArgmentsOperationJavaCode( String operation,
-			TExpression expression, TCustomSqlStatement stmt,
-			ColumnMetaData column )
-	{
-		return getOneArgmentsOperationJavaCode( operation,
-				expression,
-				stmt,
-				column,
-				false );
 	}
 
 	private String getLeftOperateRightJavaCode( String operation,
@@ -1120,7 +1135,11 @@ public class jooqConverter
 	private String getLogicNotExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, ColumnMetaData column )
 	{
-		return getOneArgmentsOperationJavaCode( "not", expression, stmt, column );
+		return getOneArgmentsOperationJavaCode( "not",
+				expression.getRightOperand( ),
+				stmt,
+				column,
+				true );
 	}
 
 	private String getObjectNameExpressionJavaCode( TExpression expression,
