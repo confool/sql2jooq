@@ -14,6 +14,7 @@ import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TGroupByItemList;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
+import gudusoft.gsqlparser.nodes.TObjectName;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
@@ -46,7 +47,8 @@ public class jooqConverter
 	private String errorMessage;
 	private int resultCode;
 	private DatabaseMetaData metadata;
-	private StringBuffer convertResult = new StringBuffer( );
+	private StringBuffer convertResultBuffer = new StringBuffer( );
+	private StringBuffer predefineBuffer = new StringBuffer( );
 	private boolean ignoreGeneric = false;
 	private TGSqlParser sqlparser;
 
@@ -62,7 +64,9 @@ public class jooqConverter
 
 	public String getConvertResult( )
 	{
-		return convertResult.toString( );
+		return predefineBuffer.toString( )
+				+ "\n"
+				+ convertResultBuffer.toString( );
 	}
 
 	public String getErrorMessage( )
@@ -79,7 +83,7 @@ public class jooqConverter
 	{
 		errorMessage = null;
 		resultCode = 0;
-		convertResult.delete( 0, convertResult.length( ) );
+		convertResultBuffer.delete( 0, convertResultBuffer.length( ) );
 	}
 
 	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
@@ -181,7 +185,65 @@ public class jooqConverter
 
 	private void convertSelectStmt( TSelectSqlStatement stmt )
 	{
-		convertResult.append( "DSLContext create = DSL.using(conn, SQLDialect." )
+		predefineStmt( stmt );
+		convertResultBuffer.append( "Result" );
+		convertResultBuffer.append( getReturnType( stmt ) );
+		convertResultBuffer.append( " result = " );
+		convertResultBuffer.append( getQueryJavaCode( stmt ) );
+		convertResultBuffer.append( ".fetch( );\n" );
+	}
+
+	private String getReturnType( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		if ( metadata == null
+				|| stmt.getResultColumnList( ) == null
+				|| ignoreGeneric )
+		{
+			buffer.append( "" );
+		}
+		else if ( stmt.getResultColumnList( ).toString( ).trim( ).equals( "*" ) )
+		{
+			buffer.append( "<Record>" );
+		}
+		else
+		{
+			TResultColumnList columns = stmt.getResultColumnList( );
+			buffer.append( "<Record" ).append( columns.size( ) ).append( "<" );
+			for ( int i = 0; i < columns.size( ); i++ )
+			{
+				buffer.append( getResultsetColumnType( stmt,
+						columns.getResultColumn( i ) ) );
+				if ( i < columns.size( ) - 1 )
+				{
+					buffer.append( ", " );
+				}
+			}
+			buffer.append( ">>" );
+		}
+		return buffer.toString( );
+	}
+
+	private String getResultsetColumnType( TSelectSqlStatement stmt,
+			TResultColumn field )
+	{
+		ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( field.getExpr( ),
+				stmt ),
+				stmt );
+		if ( column != null )
+		{
+			return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) );
+		}
+		else
+		{
+			return DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( field.getExpr( ),
+					stmt ) ) );
+		}
+	}
+
+	private void predefineStmt( TSelectSqlStatement stmt )
+	{
+		predefineBuffer.append( "DSLContext create = DSL.using(conn, SQLDialect." )
 				.append( stmt.dbvendor.toString( ).substring( 3 ).toUpperCase( ) )
 				.append( ");\n" );
 
@@ -193,64 +255,40 @@ public class jooqConverter
 				TTable table = tables.getTable( i );
 				if ( table.getAliasClause( ) != null )
 				{
-					convertResult.append( getTableJavaName( table.getName( ) ) )
-							.append( " " )
-							.append( table.getAliasClause( )
-									.toString( )
-									.toLowerCase( ) )
-							.append( " = " )
-							.append( getTableRealName( table ) )
-							.append( ".as(\"" )
-							.append( table.getAliasClause( )
-									.toString( )
-									.toLowerCase( ) )
-							.append( "\");\n" );
+					if ( table.getSubquery( ) == null )
+					{
+						predefineBuffer.append( getTableJavaName( table.getName( ) ) )
+								.append( " " )
+								.append( table.getAliasClause( )
+										.toString( )
+										.toLowerCase( ) )
+								.append( " = " )
+								.append( getTableRealName( table ) )
+								.append( ".as(\"" )
+								.append( table.getAliasClause( )
+										.toString( )
+										.toLowerCase( ) )
+								.append( "\");\n" );
+					}
+					else
+					{
+						predefineBuffer.append( "Table" );
+						predefineBuffer.append( getReturnType( table.getSubquery( ) ) );
+						predefineBuffer.append( " " )
+								.append( table.getAliasClause( )
+										.toString( )
+										.toLowerCase( ) )
+								.append( " = " );
+						predefineBuffer.append( getQueryJavaCode( table.getSubquery( ) ) );
+						predefineBuffer.append( ".asTable(\""
+								+ table.getAliasClause( )
+										.toString( )
+										.toLowerCase( )
+								+ "\");\n" );
+					}
 				}
 			}
 		}
-
-		if ( metadata == null
-				|| stmt.getResultColumnList( ) == null
-				|| ignoreGeneric )
-		{
-			convertResult.append( "Result result = " );
-		}
-		else if ( stmt.getResultColumnList( ).toString( ).trim( ).equals( "*" ) )
-		{
-			convertResult.append( "Result<Record> result = " );
-		}
-		else
-		{
-			TResultColumnList columns = stmt.getResultColumnList( );
-			convertResult.append( "Result<Record" )
-					.append( columns.size( ) )
-					.append( "<" );
-			for ( int i = 0; i < columns.size( ); i++ )
-			{
-				ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( columns.getResultColumn( i )
-						.getExpr( ),
-						stmt ),
-						stmt );
-				if ( column != null )
-				{
-					convertResult.append( DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) ) );
-				}
-				else
-				{
-					convertResult.append( DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( columns.getResultColumn( i )
-							.getExpr( ),
-							stmt ) ) ) );
-				}
-				if ( i < columns.size( ) - 1 )
-				{
-					convertResult.append( ", " );
-				}
-			}
-			convertResult.append( ">> result = " );
-		}
-
-		convertResult.append( getQueryJavaCode( stmt ) );
-		convertResult.append( ".fetch( );\n" );
 	}
 
 	private String getQueryJavaCode( TSelectSqlStatement stmt )
@@ -271,9 +309,8 @@ public class jooqConverter
 					}
 					else
 					{
-						convertResult.append( getExpressionColumnName( column.getExpr( ),
-								stmt.tables,
-								null ) );
+						convertResult.append( getColumnName( column,
+								stmt.tables ) );
 						if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 						{
 							convertResult.append( ", " );
@@ -461,7 +498,8 @@ public class jooqConverter
 
 	private String getTableName( TTable table )
 	{
-		if ( table.getName( ).equalsIgnoreCase( "DUAL" ) )
+		if ( table.getTableName( ) != null
+				&& table.getName( ).equalsIgnoreCase( "DUAL" ) )
 		{
 			return "DSL.dual()";
 		}
@@ -642,9 +680,9 @@ public class jooqConverter
 				buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
 				break;
 			default :
-				throw new UnsupportedOperationException( "\r\nExpression: "
+				throw new UnsupportedOperationException( "\nExpression: "
 						+ expression.toString( )
-						+ "\r\nDoesn't support the operation: "
+						+ "\nDoesn't support the operation: "
 						+ expression.getExpressionType( ) );
 		}
 		return buffer.toString( );
@@ -1343,7 +1381,7 @@ public class jooqConverter
 				tableName = sql.substring( index + 1 );
 			}
 			TTable table = getTableFromName( tableName, stmt.tables );
-			if ( table != null )
+			if ( table != null && table.getTableName( ) != null )
 			{
 				TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
 						.toString( ) );
@@ -1386,7 +1424,7 @@ public class jooqConverter
 					tableName = content.substring( index + 1 );
 				}
 				TTable table = getTableFromName( tableName, stmt.tables );
-				if ( table != null )
+				if ( table != null && table.getTableName( ) != null )
 				{
 					TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
 							.toString( ) );
@@ -1410,7 +1448,7 @@ public class jooqConverter
 
 	private String getColumnName( TResultColumn column, TTableList tables )
 	{
-		return getExpressionColumnName( column.getExpr( ), tables, null );
+		return getResultColumnName( column, tables, null );
 	}
 
 	private String getExpressionColumnName( TExpression expr,
@@ -1446,6 +1484,58 @@ public class jooqConverter
 				break;
 		}
 		return "";
+	}
+
+	private String getResultColumnName( TResultColumn field, TTableList tables,
+			Object columnInfo )
+	{
+		String name = getExpressionColumnName( field.getExpr( ),
+				tables,
+				columnInfo );
+		TExpression expr = field.getExpr( );
+		if ( expr.getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			if ( field.getAliasClause( ) != null )
+			{
+				String alias = field.getAliasClause( )
+						.toString( )
+						.toLowerCase( );
+				TSelectSqlStatement stmt = field.getExpr( ).getSubQuery( );
+				if ( metadata == null || ignoreGeneric )
+				{
+					predefineBuffer.append( "Field " );
+				}
+				else
+				{
+					predefineBuffer.append( "Field<"
+							+ getResultsetColumnType( stmt,
+									stmt.getResultColumnList( )
+											.getResultColumn( 0 ) )
+							+ "> " );
+				}
+				predefineBuffer.append( alias )
+						.append( " = " )
+						.append( getQueryJavaCode( field.getExpr( )
+								.getSubQuery( ) ) )
+						.append( ".asField(\"" + alias + "\");\n" );
+				return alias;
+			}
+			else
+				return name;
+		}
+		else
+		{
+			if ( field.getAliasClause( ) != null )
+			{
+				String alias = field.getAliasClause( )
+						.toString( )
+						.toLowerCase( );
+
+				return name + ".as(\"" + alias + "\")";
+			}
+			else
+				return name;
+		}
 	}
 
 	private String getFunctionJavaCode( TExpression expression,
@@ -1520,7 +1610,9 @@ public class jooqConverter
 
 			tableName = caseTableName( tableName, tables );
 
-			if ( columnName.equalsIgnoreCase( table.getTableName( ).toString( ) ) )
+			if ( table.getTableName( ) != null
+					&& columnName.equalsIgnoreCase( table.getTableName( )
+							.toString( ) ) )
 			{
 				columnName += "_";
 			}
@@ -1537,9 +1629,10 @@ public class jooqConverter
 			{
 				for ( int i = 1; i < tables.size( ); i++ )
 				{
-					TableMetaData tableMetaData = metadata.getTableMetaData( tables.getTable( i )
-							.getTableName( )
-							.toString( ) );
+					TObjectName tableName = tables.getTable( i ).getTableName( );
+					if ( tableName == null )
+						continue;
+					TableMetaData tableMetaData = metadata.getTableMetaData( tableName.toString( ) );
 					if ( tableMetaData != null )
 					{
 						ColumnMetaData columnMetaData = tableMetaData.getColumnMetaData( columnName );
@@ -1552,7 +1645,9 @@ public class jooqConverter
 				}
 			}
 
-			if ( columnName.equalsIgnoreCase( table.getTableName( ).toString( ) ) )
+			if ( table.getTableName( ) != null
+					&& columnName.equalsIgnoreCase( table.getTableName( )
+							.toString( ) ) )
 			{
 				columnName += "_";
 			}
@@ -1573,7 +1668,10 @@ public class jooqConverter
 		for ( int i = 0; i < tables.size( ); i++ )
 		{
 			TTable table = tables.getTable( i );
-			if ( table.getTableName( ).toString( ).equalsIgnoreCase( tableName ) )
+			if ( table.getTableName( ) != null
+					&& table.getTableName( )
+							.toString( )
+							.equalsIgnoreCase( tableName ) )
 			{
 				return table;
 			}
@@ -1593,7 +1691,10 @@ public class jooqConverter
 		for ( int i = 0; i < tables.size( ); i++ )
 		{
 			TTable table = tables.getTable( i );
-			if ( table.getTableName( ).toString( ).equalsIgnoreCase( tableName ) )
+			if ( table.getTableName( ) != null
+					&& table.getTableName( )
+							.toString( )
+							.equalsIgnoreCase( tableName ) )
 			{
 				return getTableName( table );
 			}
@@ -1611,23 +1712,5 @@ public class jooqConverter
 	private String getTableJavaName( String table )
 	{
 		return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table ) );
-	}
-
-	/**
-	 * @param args
-	 */
-	public static void main( String[] args )
-	{
-		String sqltext = "SELECT e.employee_id,\n"
-				+ "       	e.last_name,\n"
-				+ "       	e.department_id\n"
-				+ "FROM   	employees e,\n"
-				+ "       	departments d\n"
-				+ "WHERE  	e.department_id = d.department_id\n"
-				+ "GROUP BY	e.department_id\n"
-				+ "ORDER BY	e.department_id DESC\n"
-				+ "LIMIT 10";
-		System.out.println( new jooqConverter( EDbVendor.dbvmysql, sqltext ).getConvertResult( ) );
-
 	}
 }
