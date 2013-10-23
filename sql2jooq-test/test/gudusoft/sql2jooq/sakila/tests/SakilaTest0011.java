@@ -16,16 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0010 extends MySQLTest
+public class SakilaTest0011 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select c.city, co.country "
-+ "from city c  "
-+ "join country co  "
-+ "  on c.country_id = co.country_id";
+		String sql = "select null;";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,12 +37,10 @@ public class SakilaTest0010 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-City c = City.CITY.as("c");
-Country co = Country.COUNTRY.as("co");
 
-Result result = create.select( ((Field)c.CITY_), ((Field)co.COUNTRY_) )
-	.from( c )
-	.join( co ).on( ((Field)c.COUNTRY_ID).equal( ((Field)co.COUNTRY_ID) ) ).fetch( );
+Result result = create.select( DSL.inline( (Object) null ) )
+//                                 ^^^^^^ The method inline(Object) is ambiguous for the type DSL
+	.from(  ).fetch( );
 
 		return result;
 	}
