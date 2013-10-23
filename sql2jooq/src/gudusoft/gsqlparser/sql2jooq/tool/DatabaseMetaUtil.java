@@ -152,6 +152,10 @@ public class DatabaseMetaUtil
 			char[] c = {};
 			className = ( c.getClass( ) ).getName( );
 			clazzes.add( getSimpleJavaClass( className ) );
+			
+			Object obj = new Object();
+			className = ( obj.getClass( ) ).getName( );
+			clazzes.add( getSimpleJavaClass( className ) );
 		}
 
 		return clazzes;

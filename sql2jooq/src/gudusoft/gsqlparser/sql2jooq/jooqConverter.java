@@ -658,6 +658,7 @@ public class jooqConverter
 				buffer.append( getUnaryMinusExpressionJavaCode( expression,
 						stmt,
 						column ) );
+				break;
 			case unary_plus_t :
 				buffer.append( getUnaryPlusExpressionJavaCode( expression,
 						stmt,
@@ -986,7 +987,7 @@ public class jooqConverter
 					+ content
 					+ " )";
 		}
-		return content;
+		return content.equals( "null" ) ? "(Object)null" : content;
 	}
 
 	private String getUnaryMinusExpressionJavaCode( TExpression expression,
