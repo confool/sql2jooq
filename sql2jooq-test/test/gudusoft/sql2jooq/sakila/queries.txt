@@ -20,3 +20,4 @@ join country co
   on c.country_id = co.country_id;
 
 select null;
+select 1, +1, -1;
