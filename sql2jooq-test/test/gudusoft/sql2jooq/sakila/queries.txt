@@ -26,4 +26,7 @@ select 1 from dual where 3 between 2 and 4;
 select 1 from dual where 2 not between 3 and 4;
 
 select 1 from dual where 'abc' regexp '.*b.*';
-select 1 from dual where 'abc' not regexp '.*x.*'
+select 1 from dual where 'abc' not regexp '.*x.*';
+
+select count(*) c from actor where first_name is null;
+select count(*) c from actor where first_name is not null;
