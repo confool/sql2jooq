@@ -30,3 +30,6 @@ select 1 from dual where 'abc' not regexp '.*x.*';
 
 select count(*) c from actor where first_name is null;
 select count(*) c from actor where first_name is not null;
+
+select 1 from dual where 1 in (1, 2, 3);
+select 1 from dual where 1 not in (2, 3, 4);
