@@ -36,6 +36,8 @@ select 1 from dual where 1 not in (2, 3, 4);
 
 select (select 1);
 select (select 1) a;
+select (select count(*) c from actor);
+select (select max(actor_id) i from actor);
 select (select count(*) c from actor), (select max(actor_id) i from actor);
 select 1 from (select 1) a;
 select * from (select 1 x) a, (select 2 y) b;

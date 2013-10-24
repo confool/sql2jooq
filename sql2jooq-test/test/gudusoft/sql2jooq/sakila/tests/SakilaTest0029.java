@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0026 extends MySQLTest
+public class SakilaTest0029 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from (select 1) a";
+		String sql = "select 1 from dual where (select 1) = (select 1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,11 +37,12 @@ public class SakilaTest0026 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Table a = create.select( DSL.inline( 1 ) )
-	.from(  ).asTable("a");
 
 Result result = create.select( DSL.inline( 1 ) )
-	.from( a ).fetch( );
+	.from( DSL.dual() )
+	.where( create.select( DSL.inline( 1 ) )
+	.from(  ).equal( create.select( DSL.inline( 1 ) )
+	.from(  ) ) ).fetch( );
 
 		return result;
 	}
