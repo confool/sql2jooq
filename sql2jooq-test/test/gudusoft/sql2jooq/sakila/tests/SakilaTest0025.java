@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0020 extends MySQLTest
+public class SakilaTest0025 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where 1 not in (2, 3, 4)";
+		String sql = "select * from (select 1 x) a join (select 1 y) b on a.x = b.y";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,10 +37,14 @@ public class SakilaTest0020 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Table a = create.select( DSL.inline( 1 ).as("x") )
+	.from(  ).asTable("a");
+Table b = create.select( DSL.inline( 1 ).as("y") )
+	.from(  ).asTable("b");
 
-Result result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
-	.where( DSL.inline( 1 ).notIn( DSL.inline( 2 ), DSL.inline( 3 ), DSL.inline( 4 ) ) ).fetch( );
+Result result = create.select(  )
+	.from( a )
+	.join( b ).on( ((Field)a.X).equal( ((Field)b.Y) ) ).fetch( );
 
 		return result;
 	}
