@@ -3,6 +3,7 @@ package gudusoft.gsqlparser.sql2jooq;
 
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
+import gudusoft.gsqlparser.EJoinType;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -361,12 +362,70 @@ public class jooqConverter
 					{
 						TJoinItem joinItem = join.getJoinItems( )
 								.getJoinItem( j );
-						convertResult.append( ".join( " );
+						if ( joinItem.getJoinType( ) == EJoinType.leftouter
+								|| joinItem.getJoinType( ) == EJoinType.left )
+						{
+							convertResult.append( ".leftOuterJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.rightouter
+								|| joinItem.getJoinType( ) == EJoinType.right )
+						{
+							convertResult.append( ".rightOuterJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.natural )
+						{
+							convertResult.append( ".naturalJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.natural_leftouter
+								|| joinItem.getJoinType( ) == EJoinType.natural_left )
+						{
+							convertResult.append( ".naturalLeftOuterJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.natural_rightouter
+								|| joinItem.getJoinType( ) == EJoinType.natural_right )
+						{
+							convertResult.append( ".naturalRightOuterJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.cross )
+						{
+							convertResult.append( ".crossJoin( " );
+						}
+						else if ( joinItem.getJoinType( ) == EJoinType.fullouter
+								|| joinItem.getJoinType( ) == EJoinType.full )
+						{
+							convertResult.append( ".fullOuterJoin( " );
+						}
+						else
+						{
+							convertResult.append( ".join( " );
+						}
 						convertResult.append( getTableName( joinItem.getTable( ) ) );
-						convertResult.append( " ).on( " );
-						convertResult.append( getExpressionJavaCode( joinItem.getOnCondition( ),
-								stmt ) );
-						convertResult.append( " )\n\t" );
+						if ( joinItem.getOnCondition( ) != null )
+						{
+							convertResult.append( " ).on( " );
+							convertResult.append( getExpressionJavaCode( joinItem.getOnCondition( ),
+									stmt ) );
+							convertResult.append( " )\n\t" );
+						}
+						else if ( joinItem.getUsingColumns( ) != null )
+						{
+							convertResult.append( " ).using( " );
+							convertResult.append( "new Field[]{" );
+							for ( int z = 0; z < joinItem.getUsingColumns( )
+									.size( ); z++ )
+							{
+								TObjectName column = joinItem.getUsingColumns( )
+										.getObjectName( z );
+								convertResult.append( getObjectColumnName( column.toString( ),
+										stmt.tables ) );
+								if ( z < joinItem.getUsingColumns( ).size( ) - 1 )
+								{
+									convertResult.append( ", " );
+								}
+							}
+							convertResult.append( "}" );
+							convertResult.append( " )\n\t" );
+						}
 					}
 				}
 
