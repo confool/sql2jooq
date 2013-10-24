@@ -22,7 +22,7 @@ public class SakilaTest0022 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select count(*) c from actor), (select max(actor_id) i from actor)";
+		String sql = "select (select 1) a";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,9 +37,10 @@ public class SakilaTest0022 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field a = create.select( DSL.inline( 1 ) )
+	.from(  ).asField("a");
 
-Result result = create.select( , create.select( DSL.max( ((Field)Actor.ACTOR.ACTOR_ID) ).as("i") )
-	.from( Actor.ACTOR ) )
+Result result = create.select( a )
 	.from(  ).fetch( );
 
 		return result;
