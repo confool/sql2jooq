@@ -295,7 +295,24 @@ public class jooqConverter
 	private String getQueryJavaCode( TSelectSqlStatement stmt )
 	{
 		StringBuffer convertResult = new StringBuffer( );
-		convertResult.append( "create.select( " );
+		
+		convertResult.append( getResultsetColumnsJavaCode( stmt ) );
+		convertResult.append( getTableJoinsJavaCode( stmt ) );
+		convertResult.append( getWhereClauseJavaCode( stmt ) );
+		convertResult.append( getGroupByClauseJavaCode( stmt ) );
+		convertResult.append( getOrderbyClauseJavaCode( stmt ) );
+		convertResult.append( getLimitClauseJavaCode( stmt ) );
+		convertResult.append( getForUpdateClauseJavaCode( stmt ) );
+		
+		trimResult( convertResult );
+		
+		return convertResult.toString( );
+	}
+
+	private String getResultsetColumnsJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "create.select( " );
 		if ( stmt.getResultColumnList( ) != null )
 		{
 			for ( int i = 0; i < stmt.getResultColumnList( ).size( ); i++ )
@@ -310,11 +327,10 @@ public class jooqConverter
 					}
 					else
 					{
-						convertResult.append( getColumnName( column,
-								stmt.tables ) );
+						buffer.append( getColumnName( column, stmt.tables ) );
 						if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 						{
-							convertResult.append( ", " );
+							buffer.append( ", " );
 						}
 					}
 				}
@@ -327,17 +343,22 @@ public class jooqConverter
 						columnName = getExpressionJavaCode( column.getExpr( ),
 								stmt );
 					}
-					convertResult.append( columnName );
+					buffer.append( columnName );
 					if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 					{
-						convertResult.append( ", " );
+						buffer.append( ", " );
 					}
 				}
 			}
 		}
-		convertResult.append( " )\n\t" );
+		buffer.append( " )\n\t" );
+		return buffer.toString( );
+	}
 
-		convertResult.append( ".from( " );
+	private String getTableJoinsJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( ".from( " );
 
 		boolean closeFrom = false;
 
@@ -347,7 +368,7 @@ public class jooqConverter
 			{
 				TJoin join = stmt.joins.getJoin( i );
 
-				convertResult.append( getTableName( join.getTable( ) ) );
+				buffer.append( getTableName( join.getTable( ) ) );
 
 				if ( join.getJoinItems( ) != null
 						&& join.getJoinItems( ).size( ) > 0 )
@@ -355,7 +376,7 @@ public class jooqConverter
 					if ( !closeFrom )
 					{
 						closeFrom = true;
-						convertResult.append( " )\n\t" );
+						buffer.append( " )\n\t" );
 					}
 
 					for ( int j = 0; j < join.getJoinItems( ).size( ); j++ )
@@ -365,66 +386,66 @@ public class jooqConverter
 						if ( joinItem.getJoinType( ) == EJoinType.leftouter
 								|| joinItem.getJoinType( ) == EJoinType.left )
 						{
-							convertResult.append( ".leftOuterJoin( " );
+							buffer.append( ".leftOuterJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.rightouter
 								|| joinItem.getJoinType( ) == EJoinType.right )
 						{
-							convertResult.append( ".rightOuterJoin( " );
+							buffer.append( ".rightOuterJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.natural )
 						{
-							convertResult.append( ".naturalJoin( " );
+							buffer.append( ".naturalJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.natural_leftouter
 								|| joinItem.getJoinType( ) == EJoinType.natural_left )
 						{
-							convertResult.append( ".naturalLeftOuterJoin( " );
+							buffer.append( ".naturalLeftOuterJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.natural_rightouter
 								|| joinItem.getJoinType( ) == EJoinType.natural_right )
 						{
-							convertResult.append( ".naturalRightOuterJoin( " );
+							buffer.append( ".naturalRightOuterJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.cross )
 						{
-							convertResult.append( ".crossJoin( " );
+							buffer.append( ".crossJoin( " );
 						}
 						else if ( joinItem.getJoinType( ) == EJoinType.fullouter
 								|| joinItem.getJoinType( ) == EJoinType.full )
 						{
-							convertResult.append( ".fullOuterJoin( " );
+							buffer.append( ".fullOuterJoin( " );
 						}
 						else
 						{
-							convertResult.append( ".join( " );
+							buffer.append( ".join( " );
 						}
-						convertResult.append( getTableName( joinItem.getTable( ) ) );
+						buffer.append( getTableName( joinItem.getTable( ) ) );
 						if ( joinItem.getOnCondition( ) != null )
 						{
-							convertResult.append( " ).on( " );
-							convertResult.append( getExpressionJavaCode( joinItem.getOnCondition( ),
+							buffer.append( " ).on( " );
+							buffer.append( getExpressionJavaCode( joinItem.getOnCondition( ),
 									stmt ) );
-							convertResult.append( " )\n\t" );
+							buffer.append( " )\n\t" );
 						}
 						else if ( joinItem.getUsingColumns( ) != null )
 						{
-							convertResult.append( " ).using( " );
-							convertResult.append( "new Field[]{" );
+							buffer.append( " ).using( " );
+							buffer.append( "new Field[]{" );
 							for ( int z = 0; z < joinItem.getUsingColumns( )
 									.size( ); z++ )
 							{
 								TObjectName column = joinItem.getUsingColumns( )
 										.getObjectName( z );
-								convertResult.append( getObjectColumnName( column.toString( ),
+								buffer.append( getObjectColumnName( column.toString( ),
 										stmt.tables ) );
 								if ( z < joinItem.getUsingColumns( ).size( ) - 1 )
 								{
-									convertResult.append( ", " );
+									buffer.append( ", " );
 								}
 							}
-							convertResult.append( "}" );
-							convertResult.append( " )\n\t" );
+							buffer.append( "}" );
+							buffer.append( " )\n\t" );
 						}
 					}
 				}
@@ -433,95 +454,120 @@ public class jooqConverter
 				{
 					if ( i < stmt.joins.size( ) - 1 )
 					{
-						convertResult.append( ", " );
+						buffer.append( ", " );
 					}
 				}
 			}
 
 			if ( !closeFrom )
 			{
-				convertResult.append( " )\n\t" );
+				buffer.append( " )\n\t" );
 			}
 		}
+		return buffer.toString( );
+	}
 
+	private String getWhereClauseJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( stmt.getWhereClause( ) != null )
 		{
-			convertResult.append( ".where( " );
+			buffer.append( ".where( " );
 			TExpression expression = stmt.getWhereClause( ).getCondition( );
-			convertResult.append( getExpressionJavaCode( expression, stmt ) );
-			convertResult.append( " )\n\t" );
+			buffer.append( getExpressionJavaCode( expression, stmt ) );
+			buffer.append( " )\n\t" );
 		}
+		return buffer.toString( );
+	}
 
+	private String getGroupByClauseJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( stmt.getGroupByClause( ) != null )
 		{
-			convertResult.append( ".groupBy( " );
+			buffer.append( ".groupBy( " );
 			TGroupByItemList items = stmt.getGroupByClause( ).getItems( );
 			for ( int i = 0; i < items.size( ); i++ )
 			{
 				TGroupByItem item = items.getGroupByItem( i );
-				convertResult.append( getExpressionJavaCode( item.getExpr( ),
-						stmt ) );
+				buffer.append( getExpressionJavaCode( item.getExpr( ), stmt ) );
 				if ( i < items.size( ) - 1 )
 				{
-					convertResult.append( ", " );
+					buffer.append( ", " );
 				}
 			}
-			convertResult.append( " )\n\t" );
+			buffer.append( " )\n\t" );
 
 			if ( stmt.getGroupByClause( ).getHavingClause( ) != null )
 			{
-				convertResult.append( ".having( " );
-				convertResult.append( getExpressionJavaCode( stmt.getGroupByClause( )
-						.getHavingClause( ),
-						stmt ) );
-				convertResult.append( " )\n\t" );
+				buffer.append( ".having( " );
+				buffer.append( getExpressionJavaCode( stmt.getGroupByClause( )
+						.getHavingClause( ), stmt ) );
+				buffer.append( " )\n\t" );
 			}
 		}
+		return buffer.toString( );
+	}
 
+	private String getOrderbyClauseJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( stmt.getOrderbyClause( ) != null )
 		{
-			convertResult.append( ".orderBy( " );
+			buffer.append( ".orderBy( " );
 			TOrderByItemList items = stmt.getOrderbyClause( ).getItems( );
 			for ( int i = 0; i < items.size( ); i++ )
 			{
 				TOrderByItem item = items.getOrderByItem( i );
-				convertResult.append( getExpressionJavaCode( item.getSortKey( ),
-						stmt ) );
+				buffer.append( getExpressionJavaCode( item.getSortKey( ), stmt ) );
 				if ( item.getSortType( ) == TBaseType.srtAsc )
 				{
-					convertResult.append( ".asc( )" );
+					buffer.append( ".asc( )" );
 				}
 				else if ( item.getSortType( ) == TBaseType.srtDesc )
 				{
-					convertResult.append( ".desc( )" );
+					buffer.append( ".desc( )" );
 				}
 				if ( i < items.size( ) - 1 )
 				{
-					convertResult.append( ", " );
+					buffer.append( ", " );
 				}
 			}
-			convertResult.append( " )\n\t" );
+			buffer.append( " )\n\t" );
 		}
+		return buffer.toString( );
+	}
 
+	private String getLimitClauseJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( stmt.getLimitClause( ) != null
 				&& stmt.getLimitClause( ).getRow_count( ) != null )
 		{
-			convertResult.append( ".limit( " );
-			convertResult.append( stmt.getLimitClause( ).getRow_count( ) );
-			convertResult.append( " )\n\t" );
+			buffer.append( ".limit( " );
+			buffer.append( stmt.getLimitClause( ).getRow_count( ) );
+			buffer.append( " )\n\t" );
 		}
+		return buffer.toString( );
+	}
 
+	private String getForUpdateClauseJavaCode( TSelectSqlStatement stmt )
+	{
+		StringBuffer buffer = new StringBuffer( );
 		if ( stmt.getForUpdateClause( ) != null )
 		{
-			convertResult.append( ".forUpdate( )\n\t" );
+			buffer.append( ".forUpdate( )\n\t" );
 		}
+		return buffer.toString( );
+	}
 
+	private void trimResult( StringBuffer convertResult )
+	{
 		int index = convertResult.lastIndexOf( "\n" );
 		if ( convertResult.substring( index ).trim( ).length( ) == 0 )
 		{
 			convertResult.delete( index, convertResult.length( ) );
 		}
-		return convertResult.toString( );
 	}
 
 	private String guessExpressionJavaTypeClass( String javaCode )
