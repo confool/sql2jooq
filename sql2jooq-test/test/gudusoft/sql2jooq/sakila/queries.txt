@@ -41,6 +41,7 @@ select (select max(actor_id) i from actor);
 select (select count(*) c from actor), (select max(actor_id) i from actor);
 select 1 from (select 1) a;
 select * from (select 1 x) a, (select 2 y) b;
+select a.x from (select 1 x) a;
 select * from (select 1 x) a join (select 1 y) b on a.x = b.y;
 select 1 from dual where (select 1) = (select 1);
 select * from actor where (first_name, last_name) in (select first_name, last_name from customer);

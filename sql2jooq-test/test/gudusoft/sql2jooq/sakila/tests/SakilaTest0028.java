@@ -22,7 +22,7 @@ public class SakilaTest0028 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from (select 1 x) a join (select 1 y) b on a.x = b.y";
+		String sql = "select a.x from (select 1 x) a";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -39,12 +39,9 @@ public class SakilaTest0028 extends MySQLTest
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 Table a = create.select( DSL.inline( 1 ).as("x") )
 	.from(  ).asTable("a");
-Table b = create.select( DSL.inline( 1 ).as("y") )
-	.from(  ).asTable("b");
 
-Result result = create.select(  )
-	.from( a )
-	.join( b ).on( ((Field)a.X).equal( ((Field)b.Y) ) ).fetch( );
+Result result = create.select( ((Field)a.X) )
+	.from( a ).fetch( );
 
 		return result;
 	}
