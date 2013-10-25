@@ -295,7 +295,7 @@ public class jooqConverter
 	private String getQueryJavaCode( TSelectSqlStatement stmt )
 	{
 		StringBuffer convertResult = new StringBuffer( );
-		
+
 		convertResult.append( getResultsetColumnsJavaCode( stmt ) );
 		convertResult.append( getTableJoinsJavaCode( stmt ) );
 		convertResult.append( getWhereClauseJavaCode( stmt ) );
@@ -303,9 +303,9 @@ public class jooqConverter
 		convertResult.append( getOrderbyClauseJavaCode( stmt ) );
 		convertResult.append( getLimitClauseJavaCode( stmt ) );
 		convertResult.append( getForUpdateClauseJavaCode( stmt ) );
-		
+
 		trimResult( convertResult );
-		
+
 		return convertResult.toString( );
 	}
 
@@ -358,12 +358,10 @@ public class jooqConverter
 	private String getTableJoinsJavaCode( TSelectSqlStatement stmt )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( ".from( " );
-
-		boolean closeFrom = false;
-
-		if ( stmt.joins != null )
+		if ( stmt.joins != null && stmt.joins.size( ) > 0 )
 		{
+			boolean closeFrom = false;
+			buffer.append( ".from( " );
 			for ( int i = 0; i < stmt.joins.size( ); i++ )
 			{
 				TJoin join = stmt.joins.getJoin( i );
