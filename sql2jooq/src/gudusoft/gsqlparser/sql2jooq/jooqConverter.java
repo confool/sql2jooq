@@ -235,6 +235,11 @@ public class jooqConverter
 		{
 			return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) );
 		}
+		else if ( field.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t
+				&& field.getAliasClause( ) == null )
+		{
+			return DatabaseMetaUtil.getSimpleJavaClass( "java.lang.Object" );
+		}
 		else
 		{
 			return DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( field.getExpr( ),
@@ -342,6 +347,10 @@ public class jooqConverter
 					{
 						columnName = getExpressionJavaCode( column.getExpr( ),
 								stmt );
+						if ( column.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t )
+						{
+							columnName += ".asField( )";
+						}
 					}
 					buffer.append( columnName );
 					if ( i < stmt.getResultColumnList( ).size( ) - 1 )
