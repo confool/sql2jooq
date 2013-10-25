@@ -1153,9 +1153,21 @@ public class jooqConverter
 			ColumnMetaData column )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
-				stmt,
-				column ) );
+		if ( expression.getLeftOperand( ).getExpressionType( ) == EExpressionType.list_t )
+		{
+			buffer.append( "DSL.row( " );
+			buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+					stmt,
+					column ) );
+			buffer.append( " )" );
+		}
+		else
+		{
+			buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+					stmt,
+					column ) );
+		}
+
 		buffer.append( "." ).append( operation ).append( "( " );
 		if ( expression.getRightOperand( ) != null )
 		{
@@ -1172,7 +1184,16 @@ public class jooqConverter
 			TExpression leftExpression, Object... rightExpressions )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( getExpressionJavaCode( leftExpression, stmt, column ) );
+		if ( leftExpression.getExpressionType( ) == EExpressionType.list_t )
+		{
+			buffer.append( "DSL.row( " );
+			buffer.append( getExpressionJavaCode( leftExpression, stmt, column ) );
+			buffer.append( " )" );
+		}
+		else
+		{
+			buffer.append( getExpressionJavaCode( leftExpression, stmt, column ) );
+		}
 		buffer.append( "." ).append( operation ).append( "( " );
 		if ( rightExpressions != null )
 		{
