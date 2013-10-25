@@ -324,24 +324,14 @@ public class jooqConverter
 			{
 				TResultColumn column = stmt.getResultColumnList( )
 						.getResultColumn( i );
-				if ( column.getExpr( ).toString( ).indexOf( '*' ) != -1 )
+				if ( column.getExpr( ).toString( ).indexOf( '*' ) != -1
+						&& column.getExpr( ).toString( ).trim( ).length( ) == 1 )
 				{
-					if ( column.getExpr( ).toString( ).trim( ).length( ) == 1 )
-					{
-						continue;
-					}
-					else
-					{
-						buffer.append( getColumnName( column, stmt.tables ) );
-						if ( i < stmt.getResultColumnList( ).size( ) - 1 )
-						{
-							buffer.append( ", " );
-						}
-					}
+					continue;
 				}
 				else
 				{
-					String columnName = getColumnName( column, stmt.tables );
+					String columnName = getColumnName( column, stmt );
 					if ( columnName == null
 							|| columnName.trim( ).length( ) == 0 )
 					{
@@ -1580,9 +1570,9 @@ public class jooqConverter
 		return sql;
 	}
 
-	private String getColumnName( TResultColumn column, TTableList tables )
+	private String getColumnName( TResultColumn column, TCustomSqlStatement stmt )
 	{
-		return getResultColumnName( column, tables, null );
+		return getResultColumnName( column, stmt, null );
 	}
 
 	private String getExpressionColumnName( TExpression expr,
@@ -1620,11 +1610,11 @@ public class jooqConverter
 		return "";
 	}
 
-	private String getResultColumnName( TResultColumn field, TTableList tables,
-			Object columnInfo )
+	private String getResultColumnName( TResultColumn field,
+			TCustomSqlStatement container, Object columnInfo )
 	{
 		String name = getExpressionColumnName( field.getExpr( ),
-				tables,
+				container.tables,
 				columnInfo );
 		TExpression expr = field.getExpr( );
 		if ( expr.getExpressionType( ) == EExpressionType.subquery_t )
@@ -1659,6 +1649,7 @@ public class jooqConverter
 		}
 		else
 		{
+
 			if ( field.getAliasClause( ) != null )
 			{
 				String alias = field.getAliasClause( )
