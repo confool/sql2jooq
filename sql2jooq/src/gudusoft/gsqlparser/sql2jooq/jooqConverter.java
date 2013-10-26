@@ -666,6 +666,11 @@ public class jooqConverter
 				&& stmt.getLimitClause( ).getRow_count( ) != null )
 		{
 			buffer.append( ".limit( " );
+			if ( stmt.getLimitClause( ).getOffset( ) != null )
+			{
+				buffer.append( stmt.getLimitClause( ).getOffset( ).toString( )
+						+ ", " );
+			}
 			buffer.append( stmt.getLimitClause( ).getRow_count( ) );
 			buffer.append( " )\n\t" );
 		}
