@@ -36,6 +36,7 @@ import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -196,6 +197,10 @@ public class jooqConverter
 
 	private String getReturnType( TSelectSqlStatement stmt )
 	{
+		if ( stmt.isCombinedQuery( ) )
+		{
+			return getReturnType( stmt.getLeftStmt( ) );
+		}
 		StringBuffer buffer = new StringBuffer( );
 		if ( metadata == null
 				|| stmt.getResultColumnList( ) == null
@@ -253,44 +258,59 @@ public class jooqConverter
 				.append( stmt.dbvendor.toString( ).substring( 3 ).toUpperCase( ) )
 				.append( ");\n" );
 
-		TTableList tables = stmt.tables;
-		if ( tables != null )
+		predefineTableAndField( stmt );
+	}
+
+	private void predefineTableAndField( TSelectSqlStatement stmt )
+	{
+		if ( stmt.isCombinedQuery( ) )
 		{
-			for ( int i = 0; i < tables.size( ); i++ )
+			TSelectSqlStatement leftStmt = stmt.getLeftStmt( );
+			TSelectSqlStatement rightStmt = stmt.getRightStmt( );
+			predefineTableAndField( leftStmt );
+			predefineTableAndField( rightStmt );
+		}
+		else
+		{
+			TTableList tables = stmt.tables;
+			if ( tables != null )
 			{
-				TTable table = tables.getTable( i );
-				if ( table.getAliasClause( ) != null )
+				for ( int i = 0; i < tables.size( ); i++ )
 				{
-					if ( table.getSubquery( ) == null )
+					TTable table = tables.getTable( i );
+					if ( table.getAliasClause( ) != null )
 					{
-						predefineBuffer.append( getTableJavaName( table.getName( ) ) )
-								.append( " " )
-								.append( table.getAliasClause( )
-										.toString( )
-										.toLowerCase( ) )
-								.append( " = " )
-								.append( getTableRealName( table ) )
-								.append( ".as(\"" )
-								.append( table.getAliasClause( )
-										.toString( )
-										.toLowerCase( ) )
-								.append( "\");\n" );
-					}
-					else
-					{
-						predefineBuffer.append( "Table" );
-						predefineBuffer.append( getReturnType( table.getSubquery( ) ) );
-						predefineBuffer.append( " " )
-								.append( table.getAliasClause( )
-										.toString( )
-										.toLowerCase( ) )
-								.append( " = " );
-						predefineBuffer.append( getQueryJavaCode( table.getSubquery( ) ) );
-						predefineBuffer.append( ".asTable(\""
-								+ table.getAliasClause( )
-										.toString( )
-										.toLowerCase( )
-								+ "\");\n" );
+						if ( table.getSubquery( ) == null )
+						{
+							predefineBuffer.append( getTableJavaName( table.getName( ) ) )
+									.append( " " )
+									.append( table.getAliasClause( )
+											.toString( )
+											.toLowerCase( ) )
+									.append( " = " )
+									.append( getTableRealName( table ) )
+									.append( ".as(\"" )
+									.append( table.getAliasClause( )
+											.toString( )
+											.toLowerCase( ) )
+									.append( "\");\n" );
+						}
+						else
+						{
+							predefineBuffer.append( "Table" );
+							predefineBuffer.append( getReturnType( table.getSubquery( ) ) );
+							predefineBuffer.append( " " )
+									.append( table.getAliasClause( )
+											.toString( )
+											.toLowerCase( ) )
+									.append( " = " );
+							predefineBuffer.append( getQueryJavaCode( table.getSubquery( ) ) );
+							predefineBuffer.append( ".asTable(\""
+									+ table.getAliasClause( )
+											.toString( )
+											.toLowerCase( )
+									+ "\");\n" );
+						}
 					}
 				}
 			}
@@ -301,13 +321,117 @@ public class jooqConverter
 	{
 		StringBuffer convertResult = new StringBuffer( );
 
-		convertResult.append( getResultsetColumnsJavaCode( stmt ) );
-		convertResult.append( getTableJoinsJavaCode( stmt ) );
-		convertResult.append( getWhereClauseJavaCode( stmt ) );
-		convertResult.append( getGroupByClauseJavaCode( stmt ) );
-		convertResult.append( getOrderbyClauseJavaCode( stmt ) );
-		convertResult.append( getLimitClauseJavaCode( stmt ) );
-		convertResult.append( getForUpdateClauseJavaCode( stmt ) );
+		if ( stmt.isCombinedQuery( ) )
+		{
+			TSelectSqlStatement leftStmt = stmt.getLeftStmt( );
+			TSelectSqlStatement rightStmt = stmt.getRightStmt( );
+			convertResult.append( getQueryJavaCode( leftStmt ) );
+			switch ( stmt.getSetOperator( ) )
+			{
+				case TSelectSqlStatement.setOperator_union :
+					convertResult.append( ".union" );
+					break;
+				case TSelectSqlStatement.setOperator_unionall :
+					convertResult.append( ".unionAll" );
+					break;
+				case TSelectSqlStatement.setOperator_intersect :
+					convertResult.append( ".intersect" );
+					break;
+				case TSelectSqlStatement.setOperator_intersectall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: INTERSECT ALL" );
+					// convertResult.append( ".intersectAll" );
+					// break;
+				case TSelectSqlStatement.setOperator_minus :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: MINUS" );
+					// convertResult.append( ".minus" );
+					// break;
+				case TSelectSqlStatement.setOperator_minusall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: MINUS ALL" );
+					// convertResult.append( ".minusAll" );
+					// break;
+				case TSelectSqlStatement.setOperator_except :
+					convertResult.append( ".except" );
+					break;
+				case TSelectSqlStatement.setOperator_exceptall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: EXCEPT ALL" );
+					// convertResult.append( ".exceptAll" );
+					// break;
+			}
+			convertResult.append( "( " )
+					.append( getCombineQueryJavaCode( stmt, rightStmt ) )
+					.append( " )" );
+		}
+		else
+		{
+			convertResult.append( getResultsetColumnsJavaCode( stmt ) );
+			convertResult.append( getTableJoinsJavaCode( stmt ) );
+			convertResult.append( getWhereClauseJavaCode( stmt ) );
+			convertResult.append( getGroupByClauseJavaCode( stmt ) );
+			convertResult.append( getOrderbyClauseJavaCode( stmt ) );
+			convertResult.append( getLimitClauseJavaCode( stmt ) );
+			convertResult.append( getForUpdateClauseJavaCode( stmt ) );
+		}
+
+		trimResult( convertResult );
+
+		return convertResult.toString( );
+	}
+
+	private Object getCombineQueryJavaCode( TSelectSqlStatement root,
+			TSelectSqlStatement stmt )
+	{
+		StringBuffer convertResult = new StringBuffer( );
+
+		if ( stmt.isCombinedQuery( ) )
+		{
+			TSelectSqlStatement leftStmt = stmt.getLeftStmt( );
+			TSelectSqlStatement rightStmt = stmt.getRightStmt( );
+			convertResult.append( getQueryJavaCode( leftStmt ) );
+			switch ( stmt.getSetOperator( ) )
+			{
+				case TSelectSqlStatement.setOperator_union :
+					convertResult.append( ".union" );
+					break;
+				case TSelectSqlStatement.setOperator_unionall :
+					convertResult.append( ".unionAll" );
+					break;
+				case TSelectSqlStatement.setOperator_intersect :
+					convertResult.append( ".intersect" );
+					break;
+				case TSelectSqlStatement.setOperator_intersectall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: INTERSECT ALL" );
+					// convertResult.append( ".intersectAll" );
+					// break;
+				case TSelectSqlStatement.setOperator_minus :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: MINUS" );
+					// convertResult.append( ".minus" );
+					// break;
+				case TSelectSqlStatement.setOperator_minusall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: MINUS ALL" );
+					// convertResult.append( ".minusAll" );
+					// break;
+				case TSelectSqlStatement.setOperator_except :
+					convertResult.append( ".except" );
+					break;
+				case TSelectSqlStatement.setOperator_exceptall :
+					throw new UnsupportedOperationException( "\nDoesn't support the operation: EXCEPT ALL" );
+					// convertResult.append( ".exceptAll" );
+					// break;
+			}
+			convertResult.append( "( " )
+					.append( getCombineQueryJavaCode( root, rightStmt ) )
+					.append( " )" );
+		}
+		else
+		{
+			convertResult.append( getResultsetColumnsJavaCode( stmt ) );
+			convertResult.append( getTableJoinsJavaCode( stmt ) );
+			convertResult.append( getWhereClauseJavaCode( stmt ) );
+			convertResult.append( getGroupByClauseJavaCode( root ) );
+			convertResult.append( getOrderbyClauseJavaCode( root ) );
+			convertResult.append( getLimitClauseJavaCode( root ) );
+			convertResult.append( getForUpdateClauseJavaCode( root ) );
+		}
 
 		trimResult( convertResult );
 
@@ -435,7 +559,7 @@ public class jooqConverter
 								TObjectName column = joinItem.getUsingColumns( )
 										.getObjectName( z );
 								buffer.append( getObjectColumnName( column.toString( ),
-										stmt.tables ) );
+										stmt ) );
 								if ( z < joinItem.getUsingColumns( ).size( ) - 1 )
 								{
 									buffer.append( ", " );
@@ -561,7 +685,8 @@ public class jooqConverter
 	private void trimResult( StringBuffer convertResult )
 	{
 		int index = convertResult.lastIndexOf( "\n" );
-		if ( convertResult.substring( index ).trim( ).length( ) == 0 )
+		if ( index >= 0
+				&& convertResult.substring( index ).trim( ).length( ) == 0 )
 		{
 			convertResult.delete( index, convertResult.length( ) );
 		}
@@ -667,9 +792,7 @@ public class jooqConverter
 						+ " )" );
 				break;
 			case function_t :
-				buffer.append( getFunctionJavaCode( expression,
-						stmt.tables,
-						columns ) );
+				buffer.append( getFunctionJavaCode( expression, stmt, columns ) );
 				break;
 			case logical_or_t :
 				buffer.append( getLogicOrExpressionJavaCode( expression,
@@ -1310,7 +1433,7 @@ public class jooqConverter
 	private String getObjectNameExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt )
 	{
-		return getObjectColumnName( expression.toString( ), stmt.tables );
+		return getObjectColumnName( expression.toString( ), stmt );
 	}
 
 	private String getComparisonExpressionJavaCode( TExpression expr,
@@ -1504,7 +1627,7 @@ public class jooqConverter
 			{
 				tableName = sql.substring( index + 1 );
 			}
-			TTable table = getTableFromName( tableName, stmt.tables );
+			TTable table = getTableFromName( tableName, stmt );
 			if ( table != null && table.getTableName( ) != null )
 			{
 				TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
@@ -1547,7 +1670,7 @@ public class jooqConverter
 				{
 					tableName = content.substring( index + 1 );
 				}
-				TTable table = getTableFromName( tableName, stmt.tables );
+				TTable table = getTableFromName( tableName, stmt );
 				if ( table != null && table.getTableName( ) != null )
 				{
 					TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
@@ -1576,7 +1699,7 @@ public class jooqConverter
 	}
 
 	private String getExpressionColumnName( TExpression expr,
-			TTableList tables, Object columnInfo )
+			TCustomSqlStatement stmt, Object columnInfo )
 	{
 		ColumnMetaData column = null;
 		ColumnMetaData[] columns = null;
@@ -1595,7 +1718,7 @@ public class jooqConverter
 		switch ( expr.getExpressionType( ) )
 		{
 			case simple_object_name_t :
-				return getObjectColumnName( expr.toString( ), tables );
+				return getObjectColumnName( expr.toString( ), stmt );
 			case subquery_t :
 				break;
 			case simple_constant_t :
@@ -1603,7 +1726,7 @@ public class jooqConverter
 						+ getConstantExpressionJavaCode( expr, column )
 						+ " )";
 			case function_t :
-				return getFunctionJavaCode( expr, tables, columns );
+				return getFunctionJavaCode( expr, stmt, columns );
 			default :
 				break;
 		}
@@ -1614,7 +1737,7 @@ public class jooqConverter
 			TCustomSqlStatement container, Object columnInfo )
 	{
 		String name = getExpressionColumnName( field.getExpr( ),
-				container.tables,
+				container,
 				columnInfo );
 		TExpression expr = field.getExpr( );
 		if ( expr.getExpressionType( ) == EExpressionType.subquery_t )
@@ -1664,7 +1787,7 @@ public class jooqConverter
 	}
 
 	private String getFunctionJavaCode( TExpression expression,
-			TTableList tables, ColumnMetaData[] columns )
+			TCustomSqlStatement stmt, ColumnMetaData[] columns )
 	{
 		StringBuffer buffer = new StringBuffer( );
 		TFunctionCall function = expression.getFunctionCall( );
@@ -1707,7 +1830,7 @@ public class jooqConverter
 						column = columns[0];
 					}
 				}
-				buffer.append( getExpressionColumnName( arg, tables, column ) );
+				buffer.append( getExpressionColumnName( arg, stmt, column ) );
 				if ( i < function.getArgs( ).size( ) - 1 )
 				{
 					buffer.append( ", " );
@@ -1718,8 +1841,10 @@ public class jooqConverter
 		return buffer.toString( );
 	}
 
-	private String getObjectColumnName( String columnName, TTableList tables )
+	private String getObjectColumnName( String columnName,
+			TCustomSqlStatement stmt )
 	{
+
 		if ( columnName.indexOf( '.' ) != -1 )
 		{
 			int index = columnName.lastIndexOf( '.' );
@@ -1731,9 +1856,9 @@ public class jooqConverter
 
 			columnName = columnName.substring( index + 1 ).toUpperCase( );
 
-			TTable table = getTableFromName( tableName, tables );
+			TTable table = getTableFromName( tableName, stmt );
 
-			tableName = caseTableName( tableName, tables );
+			tableName = caseTableName( tableName, stmt );
 
 			if ( table.getTableName( ) != null
 					&& columnName.equalsIgnoreCase( table.getTableName( )
@@ -1749,12 +1874,13 @@ public class jooqConverter
 		}
 		else
 		{
-			TTable table = tables.getTable( 0 );
+			List<TTable> tables = getStmtTables( stmt );
+			TTable table = null;
 			if ( metadata != null && tables.size( ) > 0 )
 			{
 				for ( int i = 1; i < tables.size( ); i++ )
 				{
-					TObjectName tableName = tables.getTable( i ).getTableName( );
+					TObjectName tableName = tables.get( i ).getTableName( );
 					if ( tableName == null )
 						continue;
 					TableMetaData tableMetaData = metadata.getTableMetaData( tableName.toString( ) );
@@ -1763,11 +1889,16 @@ public class jooqConverter
 						ColumnMetaData columnMetaData = tableMetaData.getColumnMetaData( columnName );
 						if ( columnMetaData != null )
 						{
-							table = tables.getTable( i );
+							table = tables.get( i );
 							break;
 						}
 					}
 				}
+			}
+
+			if ( table == null && tables.size( ) > 0 )
+			{
+				table = tables.get( 0 );
 			}
 
 			if ( table.getTableName( ) != null
@@ -1788,11 +1919,42 @@ public class jooqConverter
 		}
 	}
 
-	private TTable getTableFromName( String tableName, TTableList tables )
+	private List<TTable> getStmtTables( TCustomSqlStatement stmt )
 	{
+		List<TTable> tables = new ArrayList<TTable>( );
+		appendStmtTable( tables, stmt );
+		return tables;
+	}
+
+	private void appendStmtTable( List<TTable> tables, TCustomSqlStatement stmt )
+	{
+		if ( stmt instanceof TSelectSqlStatement )
+		{
+			TSelectSqlStatement select = (TSelectSqlStatement) stmt;
+			if ( select.isCombinedQuery( ) )
+			{
+				appendStmtTable( tables, select.getLeftStmt( ) );
+				appendStmtTable( tables, select.getRightStmt( ) );
+			}
+		}
+		if ( stmt != null && stmt.tables != null )
+		{
+			for ( int i = 0; i < stmt.tables.size( ); i++ )
+			{
+				TTable table = stmt.tables.getTable( i );
+				if ( !tables.contains( table ) )
+					tables.add( table );
+			}
+		}
+	}
+
+	private TTable getTableFromName( String tableName, TCustomSqlStatement stmt )
+	{
+		List<TTable> tables = getStmtTables( stmt );
+
 		for ( int i = 0; i < tables.size( ); i++ )
 		{
-			TTable table = tables.getTable( i );
+			TTable table = tables.get( i );
 			if ( table.getTableName( ) != null
 					&& table.getTableName( )
 							.toString( )
@@ -1811,11 +1973,13 @@ public class jooqConverter
 		return null;
 	}
 
-	private String caseTableName( String tableName, TTableList tables )
+	private String caseTableName( String tableName, TCustomSqlStatement stmt )
 	{
+		List<TTable> tables = getStmtTables( stmt );
+
 		for ( int i = 0; i < tables.size( ); i++ )
 		{
-			TTable table = tables.getTable( i );
+			TTable table = tables.get( i );
 			if ( table.getTableName( ) != null
 					&& table.getTableName( )
 							.toString( )
