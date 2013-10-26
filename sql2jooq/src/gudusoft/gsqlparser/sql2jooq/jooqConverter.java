@@ -37,7 +37,9 @@ import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,6 +53,8 @@ public class jooqConverter
 	private DatabaseMetaData metadata;
 	private StringBuffer convertResultBuffer = new StringBuffer( );
 	private StringBuffer predefineBuffer = new StringBuffer( );
+	private Map<String, String> fieldAliases = new HashMap<String, String>( );
+	private List<String> asTables = new ArrayList<String>( );
 	private boolean ignoreGeneric = false;
 	private TGSqlParser sqlparser;
 
@@ -86,6 +90,8 @@ public class jooqConverter
 		errorMessage = null;
 		resultCode = 0;
 		convertResultBuffer.delete( 0, convertResultBuffer.length( ) );
+		fieldAliases.clear( );
+		asTables.clear( );
 	}
 
 	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
@@ -230,7 +236,7 @@ public class jooqConverter
 		return buffer.toString( );
 	}
 
-	private String getResultsetColumnType( TSelectSqlStatement stmt,
+	private String getResultsetColumnType( TCustomSqlStatement stmt,
 			TResultColumn field )
 	{
 		ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( field.getExpr( ),
@@ -280,9 +286,10 @@ public class jooqConverter
 					TTable table = tables.getTable( i );
 					if ( table.getAliasClause( ) != null )
 					{
+						StringBuffer buffer = new StringBuffer( );
 						if ( table.getSubquery( ) == null )
 						{
-							predefineBuffer.append( getTableJavaName( table.getName( ) ) )
+							buffer.append( getTableJavaName( table.getName( ) ) )
 									.append( " " )
 									.append( table.getAliasClause( )
 											.toString( )
@@ -297,20 +304,24 @@ public class jooqConverter
 						}
 						else
 						{
-							predefineBuffer.append( "Table" );
-							predefineBuffer.append( getReturnType( table.getSubquery( ) ) );
-							predefineBuffer.append( " " )
+							buffer.append( "Table" );
+							buffer.append( getReturnType( table.getSubquery( ) ) );
+							buffer.append( " " )
 									.append( table.getAliasClause( )
 											.toString( )
 											.toLowerCase( ) )
 									.append( " = " );
-							predefineBuffer.append( getQueryJavaCode( table.getSubquery( ) ) );
-							predefineBuffer.append( ".asTable(\""
+							buffer.append( getQueryJavaCode( table.getSubquery( ) ) );
+							buffer.append( ".asTable(\""
 									+ table.getAliasClause( )
 											.toString( )
 											.toLowerCase( )
 									+ "\");\n" );
+							asTables.add( table.getAliasClause( )
+									.toString( )
+									.toLowerCase( ) );
 						}
+						predefineBuffer.append( buffer );
 					}
 				}
 			}
@@ -740,7 +751,7 @@ public class jooqConverter
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
-			TSelectSqlStatement stmt )
+			TCustomSqlStatement stmt )
 	{
 		return getExpressionJavaCode( expression, stmt, null );
 	}
@@ -1804,23 +1815,27 @@ public class jooqConverter
 						.toString( )
 						.toLowerCase( );
 				TSelectSqlStatement stmt = field.getExpr( ).getSubQuery( );
+				StringBuffer buffer = new StringBuffer( );
 				if ( metadata == null || ignoreGeneric )
 				{
-					predefineBuffer.append( "Field " );
+					buffer.append( "Field " );
 				}
 				else
 				{
-					predefineBuffer.append( "Field<"
+					buffer.append( "Field<"
 							+ getResultsetColumnType( stmt,
 									stmt.getResultColumnList( )
 											.getResultColumn( 0 ) )
 							+ "> " );
 				}
-				predefineBuffer.append( alias )
+				String queryJavaCode = getQueryJavaCode( field.getExpr( )
+						.getSubQuery( ) );
+				buffer.append( alias )
 						.append( " = " )
-						.append( getQueryJavaCode( field.getExpr( )
-								.getSubQuery( ) ) )
+						.append( queryJavaCode )
 						.append( ".asField(\"" + alias + "\");\n" );
+				predefineBuffer.append( buffer );
+				fieldAliases.put( alias, queryJavaCode );
 				return alias;
 			}
 			else
@@ -1828,14 +1843,30 @@ public class jooqConverter
 		}
 		else
 		{
-
 			if ( field.getAliasClause( ) != null )
 			{
 				String alias = field.getAliasClause( )
 						.toString( )
 						.toLowerCase( );
-
-				return name + ".as(\"" + alias + "\")";
+				if ( metadata == null || ignoreGeneric )
+				{
+					predefineBuffer.append( "Field " );
+				}
+				else
+				{
+					predefineBuffer.append( "Field<"
+							+ getResultsetColumnType( container, field )
+							+ "> " );
+				}
+				String queryJavaCode = getExpressionJavaCode( field.getExpr( ),
+						container,
+						null );
+				predefineBuffer.append( alias )
+						.append( " = " )
+						.append( queryJavaCode )
+						.append( ".as(\"" + alias + "\");\n" );
+				fieldAliases.put( alias, queryJavaCode );
+				return alias;
 			}
 			else
 				return name;
@@ -1912,6 +1943,40 @@ public class jooqConverter
 
 			columnName = columnName.substring( index + 1 ).toUpperCase( );
 
+			if ( asTables.contains( tableName.toLowerCase( ) ) )
+			{
+				if ( metadata == null || ignoreGeneric )
+				{
+					return "((Field)"
+							+ tableName.toLowerCase( )
+							+ ".field( \""
+							+ columnName.toLowerCase( )
+							+ "\" ))";
+				}
+				else
+				{
+					String fieldAlias = columnName.toLowerCase( );
+					if ( fieldAliases.keySet( ).contains( fieldAlias ) )
+					{
+						return "((Field<"
+								+ DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( fieldAliases.get( fieldAlias ) ) )
+								+ ">)"
+								+ tableName.toLowerCase( )
+								+ ".field( \""
+								+ columnName.toLowerCase( )
+								+ "\" ))";
+					}
+					else
+						return "((Field<"
+								+ DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( columnName.toLowerCase( ) ) )
+								+ ">)"
+								+ tableName.toLowerCase( )
+								+ ".field( \""
+								+ columnName.toLowerCase( )
+								+ "\" ))";
+				}
+			}
+
 			TTable table = getTableFromName( tableName, stmt );
 
 			tableName = caseTableName( tableName, stmt );
@@ -1927,6 +1992,10 @@ public class jooqConverter
 				return "((Field)" + tableName + "." + columnName + ")";
 			else
 				return tableName + "." + columnName;
+		}
+		else if ( fieldAliases.keySet( ).contains( columnName.toLowerCase( ) ) )
+		{
+			return columnName.toLowerCase( );
 		}
 		else
 		{
