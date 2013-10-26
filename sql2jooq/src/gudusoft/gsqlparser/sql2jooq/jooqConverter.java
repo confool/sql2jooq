@@ -718,6 +718,11 @@ public class jooqConverter
 				return className;
 		}
 
+		if ( javaCode.indexOf( "DSL.count(" ) > -1 )
+		{
+			return Integer.class.getName( );
+		}
+		
 		if ( metadata != null )
 		{
 			String[] tableNames = metadata.getTableNames( );
@@ -728,7 +733,7 @@ public class jooqConverter
 				for ( int j = 0; j < columnNames.length; j++ )
 				{
 					if ( javaCode.toLowerCase( )
-							.indexOf( columnNames[i].toLowerCase( ) ) != -1 )
+							.indexOf( columnNames[j].toLowerCase( ) ) != -1 )
 					{
 						return DatabaseMetaUtil.getSimpleJavaClass( tableMetaData.getColumnMetaData( columnNames[i] )
 								.getJavaTypeClass( ) );
