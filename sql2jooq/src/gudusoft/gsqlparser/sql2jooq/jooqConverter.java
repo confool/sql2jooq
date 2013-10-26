@@ -1341,7 +1341,7 @@ public class jooqConverter
 					stmt,
 					column ) );
 
-			if ( !operation.equals( "in" )
+			if ( !operation.equals( "in" ) && !operation.equals( "notIn" )
 					&& expression.getRightOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
 			{
 				buffer.append( ".asField( )" );
