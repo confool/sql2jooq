@@ -706,8 +706,25 @@ public class jooqConverter
 			if ( javaCode.indexOf( className ) != -1 )
 				return className;
 		}
-		if ( javaCode.toLowerCase( ).indexOf( "DSL.count".toLowerCase( ) ) != -1 )
-			return Integer.class.getName( );
+
+		if ( metadata != null )
+		{
+			String[] tableNames = metadata.getTableNames( );
+			for ( int i = 0; i < tableNames.length; i++ )
+			{
+				TableMetaData tableMetaData = metadata.getTableMetaData( tableNames[i] );
+				String[] columnNames = tableMetaData.getColumnNames( );
+				for ( int j = 0; j < columnNames.length; j++ )
+				{
+					if ( javaCode.toLowerCase( )
+							.indexOf( columnNames[i].toLowerCase( ) ) != -1 )
+					{
+						return DatabaseMetaUtil.getSimpleJavaClass( tableMetaData.getColumnMetaData( columnNames[i] )
+								.getJavaTypeClass( ) );
+					}
+				}
+			}
+		}
 
 		Pattern pattern = Pattern.compile( "\".+?\"" );
 		Matcher matcher = pattern.matcher( javaCode );
@@ -719,7 +736,7 @@ public class jooqConverter
 		if ( matcher.find( ) )
 			return Integer.class.getName( );
 
-		return String.class.getName( );
+		return Object.class.getName( );
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
@@ -1578,11 +1595,7 @@ public class jooqConverter
 		buffer.append( "." + operation + "( " );
 		Object column = null;
 		if ( expr.getLeftOperand( ).getExpressionType( ) == EExpressionType.function_t
-				&& expr.getLeftOperand( )
-						.getFunctionCall( )
-						.getFunctionName( )
-						.toString( )
-						.equalsIgnoreCase( "row" ) )
+				&& expr.getLeftOperand( ).getFunctionCall( ).getArgs( ).size( ) == 1 )
 		{
 			column = getColumnMetaDatasBySql( expr.getLeftOperand( )
 					.getFunctionCall( )
@@ -1643,6 +1656,25 @@ public class jooqConverter
 				}
 			}
 		}
+		else
+		{
+			List<TTable> tables = getStmtTables( stmt );
+			if ( tables.size( ) > 0 )
+			{
+				TTable table = tables.get( 0 );
+				if ( table != null && table.getTableName( ) != null )
+				{
+					TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
+							.toString( ) );
+					if ( tableMetaData != null )
+					{
+						return tableMetaData.getColumnMetaData( columnName );
+					}
+				}
+			}
+			else
+				return null;
+		}
 		return null;
 	}
 
@@ -1685,6 +1717,25 @@ public class jooqConverter
 						metaDatas[i] = tableMetaData.getColumnMetaData( columnName );
 					}
 				}
+			}
+			else
+			{
+				List<TTable> tables = getStmtTables( stmt );
+				if ( tables.size( ) > 0 )
+				{
+					TTable table = tables.get( 0 );
+					if ( table != null && table.getTableName( ) != null )
+					{
+						TableMetaData tableMetaData = metadata.getTableMetaData( table.getTableName( )
+								.toString( ) );
+						if ( tableMetaData != null )
+						{
+							metaDatas[i] = tableMetaData.getColumnMetaData( columnName );
+						}
+					}
+				}
+				else
+					metaDatas[i] = null;
 			}
 		}
 		return metaDatas;
