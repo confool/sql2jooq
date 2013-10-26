@@ -304,22 +304,22 @@ public class jooqConverter
 						}
 						else
 						{
-							buffer.append( "Table" );
-							buffer.append( getReturnType( table.getSubquery( ) ) );
-							buffer.append( " " )
-									.append( table.getAliasClause( )
-											.toString( )
-											.toLowerCase( ) )
-									.append( " = " );
-							buffer.append( getQueryJavaCode( table.getSubquery( ) ) );
-							buffer.append( ".asTable(\""
-									+ table.getAliasClause( )
-											.toString( )
-											.toLowerCase( )
-									+ "\");\n" );
-							asTables.add( table.getAliasClause( )
+							String tableAlias = table.getAliasClause( )
 									.toString( )
-									.toLowerCase( ) );
+									.toLowerCase( );
+							if ( !asTables.contains( tableAlias ) )
+							{
+								buffer.append( "Table" );
+								buffer.append( getReturnType( table.getSubquery( ) ) );
+								buffer.append( " " )
+										.append( tableAlias )
+										.append( " = " );
+								buffer.append( getQueryJavaCode( table.getSubquery( ) ) );
+								buffer.append( ".asTable(\""
+										+ tableAlias
+										+ "\");\n" );
+								asTables.add( tableAlias );
+							}
 						}
 						predefineBuffer.append( buffer );
 					}
@@ -722,7 +722,6 @@ public class jooqConverter
 		{
 			return Integer.class.getName( );
 		}
-		
 		if ( metadata != null )
 		{
 			String[] tableNames = metadata.getTableNames( );
@@ -1279,10 +1278,18 @@ public class jooqConverter
 		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
 				stmt,
 				column ) );
+		if ( expression.getLeftOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			buffer.append( ".asField( )" );
+		}
 		buffer.append( ", " );
 		buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
 				stmt,
 				column ) );
+		if ( expression.getRightOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			buffer.append( ".asField( )" );
+		}
 		buffer.append( " )" );
 		return buffer.toString( );
 	}
@@ -1295,6 +1302,10 @@ public class jooqConverter
 		buffer.append( "." ).append( operation ).append( "( " );
 		buffer.append( getExpressionJavaCode( useExpressionSelf ? expression
 				: expression.getLeftOperand( ), stmt, column ) );
+		if ( ( useExpressionSelf ? expression : expression.getLeftOperand( ) ).getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			buffer.append( ".asField( )" );
+		}
 		buffer.append( " )" );
 		return buffer.toString( );
 	}
@@ -1317,6 +1328,10 @@ public class jooqConverter
 			buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
 					stmt,
 					column ) );
+			if ( expression.getLeftOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+			{
+				buffer.append( ".asField( )" );
+			}
 		}
 
 		buffer.append( "." ).append( operation ).append( "( " );
@@ -1325,6 +1340,12 @@ public class jooqConverter
 			buffer.append( getExpressionJavaCode( expression.getRightOperand( ),
 					stmt,
 					column ) );
+
+			if ( !operation.equals( "in" )
+					&& expression.getRightOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+			{
+				buffer.append( ".asField( )" );
+			}
 		}
 		buffer.append( " )" );
 		return buffer.toString( );
@@ -1344,6 +1365,10 @@ public class jooqConverter
 		else
 		{
 			buffer.append( getExpressionJavaCode( leftExpression, stmt, column ) );
+			if ( leftExpression.getExpressionType( ) == EExpressionType.subquery_t )
+			{
+				buffer.append( ".asField( )" );
+			}
 		}
 		buffer.append( "." ).append( operation ).append( "( " );
 		if ( rightExpressions != null )
@@ -1355,6 +1380,10 @@ public class jooqConverter
 					buffer.append( getExpressionJavaCode( (TExpression) rightExpressions[i],
 							stmt,
 							column ) );
+					if ( ( (TExpression) rightExpressions[i] ).getExpressionType( ) == EExpressionType.subquery_t )
+					{
+						buffer.append( ".asField( )" );
+					}
 				}
 				else if ( rightExpressions[i] instanceof String )
 				{
@@ -1608,6 +1637,10 @@ public class jooqConverter
 				stmt,
 				parentColumn );
 		buffer.append( left );
+		if ( expr.getLeftOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			buffer.append( ".asField( )" );
+		}
 		buffer.append( "." + operation + "( " );
 		Object column = null;
 		if ( expr.getLeftOperand( ).getExpressionType( ) == EExpressionType.function_t
@@ -1630,7 +1663,10 @@ public class jooqConverter
 		buffer.append( getExpressionJavaCode( expr.getRightOperand( ),
 				stmt,
 				column ) );
-
+		if ( expr.getRightOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
+		{
+			buffer.append( ".asField( )" );
+		}
 		buffer.append( " )" );
 		return buffer.toString( );
 	}
@@ -1819,6 +1855,10 @@ public class jooqConverter
 				String alias = field.getAliasClause( )
 						.toString( )
 						.toLowerCase( );
+				if ( fieldAliases.containsKey( alias ) )
+				{
+					return alias;
+				}
 				TSelectSqlStatement stmt = field.getExpr( ).getSubQuery( );
 				StringBuffer buffer = new StringBuffer( );
 				if ( metadata == null || ignoreGeneric )
@@ -1853,6 +1893,10 @@ public class jooqConverter
 				String alias = field.getAliasClause( )
 						.toString( )
 						.toLowerCase( );
+				if ( fieldAliases.containsKey( alias ) )
+				{
+					return alias;
+				}
 				if ( metadata == null || ignoreGeneric )
 				{
 					predefineBuffer.append( "Field " );
