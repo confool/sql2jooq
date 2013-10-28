@@ -62,6 +62,13 @@ public class CodeGenerator
 
                 jooqConverter convert = new jooqConverter( metaData, EDbVendor.dbvmysql, query );
                 convert.convert( true );
+                
+				if ( convert.getErrorMessage( ) != null )
+				{
+					System.err.println( convert.getErrorMessage( ) );
+					continue;
+				}
+                
                 final String result = convert.getConvertResult( );
 
                 File templateFile = new File( "./xml/guestbook/SakilaTest.template.java" );
