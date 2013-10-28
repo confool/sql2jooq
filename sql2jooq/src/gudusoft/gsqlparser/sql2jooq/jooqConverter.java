@@ -27,6 +27,7 @@ import gudusoft.gsqlparser.nodes.TWhenClauseItemList;
 import gudusoft.gsqlparser.sql2jooq.db.ColumnMetaData;
 import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
 import gudusoft.gsqlparser.sql2jooq.db.TableMetaData;
+import gudusoft.gsqlparser.sql2jooq.exception.PlainSQLException;
 import gudusoft.gsqlparser.sql2jooq.tool.DatabaseMetaUtil;
 import gudusoft.gsqlparser.sql2jooq.tool.GenerationUtil;
 import gudusoft.gsqlparser.stmt.TDeleteSqlStatement;
@@ -239,22 +240,29 @@ public class jooqConverter
 	private String getResultsetColumnType( TCustomSqlStatement stmt,
 			TResultColumn field )
 	{
-		ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( field.getExpr( ),
-				stmt ),
-				stmt );
-		if ( column != null )
+		try
 		{
-			return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) );
+			ColumnMetaData column = getColumnMetaDataBySql( getExpressionJavaCode( field.getExpr( ),
+					stmt ),
+					stmt );
+			if ( column != null )
+			{
+				return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) );
+			}
+			else if ( field.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t
+					&& field.getAliasClause( ) == null )
+			{
+				return DatabaseMetaUtil.getSimpleJavaClass( "java.lang.Object" );
+			}
+			else
+			{
+				return DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( field.getExpr( ),
+						stmt ) ) );
+			}
 		}
-		else if ( field.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t
-				&& field.getAliasClause( ) == null )
+		catch ( PlainSQLException e )
 		{
 			return DatabaseMetaUtil.getSimpleJavaClass( "java.lang.Object" );
-		}
-		else
-		{
-			return DatabaseMetaUtil.getSimpleJavaClass( guessExpressionJavaTypeClass( getExpressionJavaCode( field.getExpr( ),
-					stmt ) ) );
 		}
 	}
 
@@ -466,18 +474,27 @@ public class jooqConverter
 				}
 				else
 				{
-					String columnName = getColumnName( column, stmt );
-					if ( columnName == null
-							|| columnName.trim( ).length( ) == 0 )
+					try
 					{
-						columnName = getExpressionJavaCode( column.getExpr( ),
-								stmt );
-						if ( column.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t )
+						String columnName = getColumnName( column, stmt );
+						if ( columnName == null
+								|| columnName.trim( ).length( ) == 0 )
 						{
-							columnName += ".asField( )";
+							columnName = getExpressionJavaCode( column.getExpr( ),
+									stmt );
+							if ( column.getExpr( ).getExpressionType( ) == EExpressionType.subquery_t )
+							{
+								columnName += ".asField( )";
+							}
 						}
+						buffer.append( columnName );
 					}
-					buffer.append( columnName );
+					catch ( PlainSQLException e )
+					{
+						buffer.append( "DSL.field( \""
+								+ column.toString( )
+								+ "\" )" );
+					}
 					if ( i < stmt.getResultColumnList( ).size( ) - 1 )
 					{
 						buffer.append( ", " );
@@ -784,6 +801,7 @@ public class jooqConverter
 
 	private String getExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, Object columnInfo )
+			throws PlainSQLException
 	{
 		ColumnMetaData column = null;
 		ColumnMetaData[] columns = null;
@@ -800,151 +818,166 @@ public class jooqConverter
 			column = columns[0];
 		}
 		StringBuffer buffer = new StringBuffer( );
-		switch ( expression.getExpressionType( ) )
+		try
 		{
-			case parenthesis_t :
-				buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
-						stmt,
-						column ) );
-				break;
-			case simple_comparison_t :
-				buffer.append( getComparisonExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case simple_object_name_t :
-				buffer.append( getObjectNameExpressionJavaCode( expression,
-						stmt ) );
-				break;
-			case logical_and_t :
-				buffer.append( getLogicAndExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case simple_constant_t :
-				buffer.append( "DSL.inline( "
-						+ getConstantExpressionJavaCode( expression, column )
-						+ " )" );
-				break;
-			case function_t :
-				buffer.append( getFunctionJavaCode( expression, stmt, columns ) );
-				break;
-			case logical_or_t :
-				buffer.append( getLogicOrExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case logical_not_t :
-				buffer.append( getLogicNotExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case bitwise_and_t :
-				buffer.append( getBitwiseAndExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case bitwise_or_t :
-				buffer.append( getBitwiseOrExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case bitwise_shift_left_t :
-				buffer.append( getBitwiseLeftShiftExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case bitwise_shift_right_t :
-				buffer.append( getBitwiseRightShiftExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case arithmetic_plus_t :
-				buffer.append( getArithmeticPlusExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case arithmetic_minus_t :
-				buffer.append( getArithmeticMinusExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case arithmetic_divide_t :
-				buffer.append( getArithmeticDivideExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case arithmetic_times_t :
-				buffer.append( getArithmeticTimesExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case arithmetic_modulo_t :
-				buffer.append( getArithmeticModuloExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case power_t :
-				buffer.append( getPowerExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case in_t :
-				buffer.append( getInExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case list_t :
-				buffer.append( getListExpressionJavaCode( expression,
-						stmt,
-						columns ) );
-				break;
-			case null_t :
-				buffer.append( getNullExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case between_t :
-				buffer.append( getBetweenExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case pattern_matching_t :
-				buffer.append( getLikeExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case unary_minus_t :
-				buffer.append( getUnaryMinusExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case unary_plus_t :
-				buffer.append( getUnaryPlusExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case group_comparison_t :
-				buffer.append( getGroupComparisonExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case case_t :
-				buffer.append( getCaseExpressionJavaCode( expression,
-						stmt,
-						column ) );
-				break;
-			case exists_t :
-				buffer.append( getExistsExpressionJavaCode( expression ) );
-				break;
-			case subquery_t :
-				buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
-				break;
-			default :
-				throw new UnsupportedOperationException( "\nExpression: "
+			switch ( expression.getExpressionType( ) )
+			{
+				case parenthesis_t :
+					buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
+							stmt,
+							column ) );
+					break;
+				case simple_comparison_t :
+					buffer.append( getComparisonExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case simple_object_name_t :
+					buffer.append( getObjectNameExpressionJavaCode( expression,
+							stmt ) );
+					break;
+				case logical_and_t :
+					buffer.append( getLogicAndExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case simple_constant_t :
+					buffer.append( "DSL.inline( "
+							+ getConstantExpressionJavaCode( expression, column )
+							+ " )" );
+					break;
+				case function_t :
+					buffer.append( getFunctionJavaCode( expression,
+							stmt,
+							columns ) );
+					break;
+				case logical_or_t :
+					buffer.append( getLogicOrExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case logical_not_t :
+					buffer.append( getLogicNotExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case bitwise_and_t :
+					buffer.append( getBitwiseAndExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case bitwise_or_t :
+					buffer.append( getBitwiseOrExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case bitwise_shift_left_t :
+					buffer.append( getBitwiseLeftShiftExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case bitwise_shift_right_t :
+					buffer.append( getBitwiseRightShiftExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case arithmetic_plus_t :
+					buffer.append( getArithmeticPlusExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case arithmetic_minus_t :
+					buffer.append( getArithmeticMinusExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case arithmetic_divide_t :
+					buffer.append( getArithmeticDivideExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case arithmetic_times_t :
+					buffer.append( getArithmeticTimesExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case arithmetic_modulo_t :
+					buffer.append( getArithmeticModuloExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case power_t :
+					buffer.append( getPowerExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case in_t :
+					buffer.append( getInExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case list_t :
+					buffer.append( getListExpressionJavaCode( expression,
+							stmt,
+							columns ) );
+					break;
+				case null_t :
+					buffer.append( getNullExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case between_t :
+					buffer.append( getBetweenExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case pattern_matching_t :
+					buffer.append( getLikeExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case unary_minus_t :
+					buffer.append( getUnaryMinusExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case unary_plus_t :
+					buffer.append( getUnaryPlusExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case group_comparison_t :
+					buffer.append( getGroupComparisonExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case case_t :
+					buffer.append( getCaseExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case exists_t :
+					buffer.append( getExistsExpressionJavaCode( expression ) );
+					break;
+				case subquery_t :
+					buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
+					break;
+				default :
+					throw new UnsupportedOperationException( "\nExpression: "
+							+ expression.toString( )
+							+ "\nDoesn't support the operation: "
+							+ expression.getExpressionType( ) );
+			}
+		}
+		catch ( PlainSQLException e )
+		{
+			if ( !e.isFromField( ) )
+			{
+				buffer.append( "DSL.condition( \""
 						+ expression.toString( )
-						+ "\nDoesn't support the operation: "
-						+ expression.getExpressionType( ) );
+						+ "\" )" );
+			}
+			else throw e;
 		}
 		return buffer.toString( );
 	}
@@ -1928,52 +1961,68 @@ public class jooqConverter
 		TFunctionCall function = expression.getFunctionCall( );
 		String content = function.toString( ).toLowerCase( );
 		content = content.substring( 0, content.indexOf( '(' ) );
-		buffer.append( "DSL." );
-		buffer.append( convertFunctionToDSLMethod( content ) );
-		buffer.append( "( " );
-		for ( int i = 0; i < function.getArgs( ).size( ); i++ )
+		if ( !supportFunction( content ) )
 		{
-			TExpression arg = function.getArgs( ).getExpression( i );
-			if ( arg.toString( ).indexOf( '*' ) != -1 )
+			throw new PlainSQLException( expression, stmt );
+		}
+		else
+		{
+			buffer.append( "DSL." );
+			buffer.append( convertFunctionToDSLMethod( content ) );
+			buffer.append( "( " );
+			for ( int i = 0; i < function.getArgs( ).size( ); i++ )
 			{
-				if ( arg.toString( ).trim( ).length( ) == 1 )
+				TExpression arg = function.getArgs( ).getExpression( i );
+				if ( arg.toString( ).indexOf( '*' ) != -1 )
 				{
-					continue;
+					if ( arg.toString( ).trim( ).length( ) == 1 )
+					{
+						continue;
+					}
+					else
+					{
+						buffer.append( arg.toString( )
+								.replace( "*", "" )
+								.toLowerCase( ) );
+						if ( i < function.getArgs( ).size( ) - 1 )
+						{
+							buffer.append( ", " );
+						}
+					}
 				}
 				else
 				{
-					buffer.append( arg.toString( )
-							.replace( "*", "" )
-							.toLowerCase( ) );
+					ColumnMetaData column = null;
+					if ( columns != null )
+					{
+						if ( columns.length > i )
+						{
+							column = columns[i];
+						}
+						else if ( columns.length >= 1 )
+						{
+							column = columns[0];
+						}
+					}
+					buffer.append( getExpressionColumnName( arg, stmt, column ) );
 					if ( i < function.getArgs( ).size( ) - 1 )
 					{
 						buffer.append( ", " );
 					}
 				}
 			}
-			else
-			{
-				ColumnMetaData column = null;
-				if ( columns != null )
-				{
-					if ( columns.length > i )
-					{
-						column = columns[i];
-					}
-					else if ( columns.length >= 1 )
-					{
-						column = columns[0];
-					}
-				}
-				buffer.append( getExpressionColumnName( arg, stmt, column ) );
-				if ( i < function.getArgs( ).size( ) - 1 )
-				{
-					buffer.append( ", " );
-				}
-			}
+			buffer.append( " )" );
 		}
-		buffer.append( " )" );
 		return buffer.toString( );
+	}
+
+	private boolean supportFunction( String function )
+	{
+		if ( function.equalsIgnoreCase( "IF" ) )
+		{
+			return false;
+		}
+		return true;
 	}
 
 	private Object convertFunctionToDSLMethod( String function )
