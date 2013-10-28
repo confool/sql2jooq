@@ -1959,7 +1959,7 @@ public class jooqConverter
 		StringBuffer buffer = new StringBuffer( );
 		TFunctionCall function = expression.getFunctionCall( );
 		String content = function.toString( ).toLowerCase( );
-		content = content.substring( 0, content.indexOf( '(' ) );
+		content = content.substring( 0, content.indexOf( '(' ) ).trim( );;
 		if ( !supportFunction( content ) )
 		{
 			throw new PlainSQLException( expression, stmt );
