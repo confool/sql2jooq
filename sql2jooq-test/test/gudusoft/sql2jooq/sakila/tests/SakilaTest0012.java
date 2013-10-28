@@ -22,7 +22,7 @@ public class SakilaTest0012 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from country left join city using (country_id)";
+		String sql = "select country, city from country left join city using (country_id)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,7 +38,7 @@ public class SakilaTest0012 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select(  )
+Result result = create.select( ((Field)Country.COUNTRY.COUNTRY_), ((Field)City.CITY.CITY_) )
 	.from( Country.COUNTRY )
 	.leftOuterJoin( City.CITY ).using( new Field[]{((Field)City.CITY.COUNTRY_ID)} ).fetch( );
 
