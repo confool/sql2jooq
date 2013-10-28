@@ -22,7 +22,7 @@ public class SakilaTest0014 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where 2 not between 3 and 4";
+		String sql = "select * from country left join city using (country_id) left join address using (city_id)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,9 +38,10 @@ public class SakilaTest0014 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
-	.where( DSL.inline( 2 ).notBetween( DSL.inline( 3 ) ).and( DSL.inline( 4 ) ) ).fetch( );
+Result result = create.select(  )
+	.from( Country.COUNTRY )
+	.leftOuterJoin( City.CITY ).using( new Field[]{((Field)City.CITY.COUNTRY_ID)} )
+	.leftOuterJoin( Address.ADDRESS ).using( new Field[]{((Field)City.CITY.CITY_ID)} ).fetch( );
 
 		return result;
 	}

@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0029 extends MySQLTest
+public class SakilaTest0036 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select count(*) c from actor), (select max(actor_id) i from actor)";
+		String sql = "select * from actor where (first_name, last_name) in (select first_name, last_name from customer)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,12 +37,11 @@ public class SakilaTest0029 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field c = DSL.count(  ).as("c");
-Field i = DSL.max( ((Field)Actor.ACTOR.ACTOR_ID) ).as("i");
 
-Result result = create.select( create.select( c )
-	.from( Actor.ACTOR ).asField( ), create.select( i )
-	.from( Actor.ACTOR ).asField( ) ).fetch( );
+Result result = create.select(  )
+	.from( Actor.ACTOR )
+	.where( DSL.row( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ).in( create.select( ((Field)Customer.CUSTOMER.FIRST_NAME), ((Field)Customer.CUSTOMER.LAST_NAME) )
+	.from( Customer.CUSTOMER ) ) ).fetch( );
 
 		return result;
 	}

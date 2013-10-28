@@ -22,7 +22,7 @@ public class SakilaTest0031 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where ('a', 1) <> ('b', 2)";
+		String sql = "select * from (select 1 x) a, (select 2 y) b";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,10 +37,13 @@ public class SakilaTest0031 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field x = DSL.inline( 1 ).as("x");
+Table a = create.select( x ).asTable("a");
+Field y = DSL.inline( 2 ).as("y");
+Table b = create.select( y ).asTable("b");
 
-Result result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
-	.where( DSL.row( DSL.inline( "a" ), DSL.inline( 1 ) ).notEqual( DSL.row( DSL.inline( "b" ), DSL.inline( 2 ) ) ) ).fetch( );
+Result result = create.select(  )
+	.from( a, b ).fetch( );
 
 		return result;
 	}

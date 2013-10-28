@@ -22,7 +22,7 @@ public class SakilaTest0021 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select 1)";
+		String sql = "select count(*) c from actor where first_name is null";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,8 +37,11 @@ public class SakilaTest0021 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field c = DSL.count(  ).as("c");
 
-Result result = create.select( create.select( DSL.inline( 1 ) ).asField( ) ).fetch( );
+Result result = create.select( c )
+	.from( Actor.ACTOR )
+	.where( ((Field)Actor.ACTOR.FIRST_NAME).isNull(  ) ).fetch( );
 
 		return result;
 	}
