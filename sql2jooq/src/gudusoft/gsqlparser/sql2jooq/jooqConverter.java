@@ -801,7 +801,6 @@ public class jooqConverter
 
 	private String getExpressionJavaCode( TExpression expression,
 			TCustomSqlStatement stmt, Object columnInfo )
-			throws PlainSQLException
 	{
 		ColumnMetaData column = null;
 		ColumnMetaData[] columns = null;
