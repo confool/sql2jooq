@@ -26,11 +26,7 @@ public class SakilaTest0051 extends MySQLTest
 + "  case actor_id when 1 then 1 end a1, "
 + "  case actor_id when 1 then 1 when 2 then 2 end a2, "
 + "  case actor_id when 1 then 1 else 0 end a3, "
-+ "  case actor_id when 1 then 1 when 2 then 2 else 0 end a4, "
-+ "  case when actor_id = 1 then 1 end b1, "
-+ "  case when actor_id = 1 then 1 when actor_id = 2 then 2 end b2, "
-+ "  case when actor_id = 1 then 1 else 0 end b3, "
-+ "  case when actor_id = 1 then 1 actor_id = 2 then 2 else 0 end b4 "
++ "  case actor_id when 1 then 1 when 2 then 2 else 0 end a4 "
 + "from actor "
 + "where actor_id < 10";
 		
@@ -46,7 +42,15 @@ public class SakilaTest0051 extends MySQLTest
 	
 	private static Result generatedSQL( Connection conn )
 	{
-		
+		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field a1 = DSL.decode( ).value( ((Field)Actor.ACTOR.ACTOR_ID) ).when( DSL.inline( 1 ), DSL.inline( 1 ) ).as("a1");
+Field a2 = DSL.decode( ).value( ((Field)Actor.ACTOR.ACTOR_ID) ).when( DSL.inline( 1 ), DSL.inline( 1 ) ).when( DSL.inline( 2 ), DSL.inline( 2 ) ).as("a2");
+Field a3 = DSL.decode( ).value( ((Field)Actor.ACTOR.ACTOR_ID) ).when( DSL.inline( 1 ), DSL.inline( 1 ) ).otherwise( DSL.inline( 0 ) ).as("a3");
+Field a4 = DSL.decode( ).value( ((Field)Actor.ACTOR.ACTOR_ID) ).when( DSL.inline( 1 ), DSL.inline( 1 ) ).when( DSL.inline( 2 ), DSL.inline( 2 ) ).otherwise( DSL.inline( 0 ) ).as("a4");
+
+Result result = create.select( a1, a2, a3, a4 )
+	.from( Actor.ACTOR )
+	.where( ((Field)Actor.ACTOR.ACTOR_ID).lessThan( DSL.inline( 10 ) ) ).fetch( );
 
 		return result;
 	}
