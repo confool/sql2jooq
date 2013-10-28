@@ -22,7 +22,7 @@ public class SakilaTest0054 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select nullif(1, 2), nullif(1, 1);";
+		String sql = "select ifnull(1, 2), ifnull(null, 2)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,7 +38,7 @@ public class SakilaTest0054 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.nullif( DSL.inline( 1 ), DSL.inline( 2 ) ), DSL.nullif( DSL.inline( 1 ), DSL.inline( 1 ) ) ).fetch( );
+Result result = create.select( DSL.nvl( DSL.inline( 1 ), DSL.inline( 2 ) ), DSL.nvl( DSL.inline( (Object)null ), DSL.inline( 2 ) ) ).fetch( );
 
 		return result;
 	}

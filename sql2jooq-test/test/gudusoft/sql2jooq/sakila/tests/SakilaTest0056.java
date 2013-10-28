@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0053 extends MySQLTest
+public class SakilaTest0056 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select if (1 < 2, 1, 2) a, if (1 > 2, 1, 2) b";
+		String sql = "select nullif(1, 2), nullif(1, 1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,10 +37,8 @@ public class SakilaTest0053 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field a = DSL.if ( , DSL.inline( 1 ), DSL.inline( 2 ) ).as("a");
-Field b = DSL.if ( , DSL.inline( 1 ), DSL.inline( 2 ) ).as("b");
 
-Result result = create.select( a, b ).fetch( );
+Result result = create.select( DSL.nullif( DSL.inline( 1 ), DSL.inline( 2 ) ), DSL.nullif( DSL.inline( 1 ), DSL.inline( 1 ) ) ).fetch( );
 
 		return result;
 	}
