@@ -40,8 +40,8 @@ public class SakilaTest0015 extends MySQLTest
 
 Result result = create.select( ((Field)Country.COUNTRY.COUNTRY_), ((Field)City.CITY.CITY_), ((Field)Address.ADDRESS.ADDRESS_) )
 	.from( Country.COUNTRY )
-	.leftOuterJoin( City.CITY ).using( new Field[]{((Field)City.CITY.COUNTRY_ID)} )
-	.leftOuterJoin( Address.ADDRESS ).using( new Field[]{((Field)City.CITY.CITY_ID)} ).fetch( );
+	.leftOuterJoin( City.CITY ).using( ((Field)City.CITY.COUNTRY_ID) )
+	.leftOuterJoin( Address.ADDRESS ).using( ((Field)City.CITY.CITY_ID) ).fetch( );
 
 		return result;
 	}
