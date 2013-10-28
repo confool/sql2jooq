@@ -563,7 +563,6 @@ public class jooqConverter
 						else if ( joinItem.getUsingColumns( ) != null )
 						{
 							buffer.append( " ).using( " );
-							buffer.append( "new Field[]{" );
 							for ( int z = 0; z < joinItem.getUsingColumns( )
 									.size( ); z++ )
 							{
@@ -576,7 +575,6 @@ public class jooqConverter
 									buffer.append( ", " );
 								}
 							}
-							buffer.append( "}" );
 							buffer.append( " )\n\t" );
 						}
 					}
