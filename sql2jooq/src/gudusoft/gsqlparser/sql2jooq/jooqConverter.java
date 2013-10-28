@@ -1031,7 +1031,7 @@ public class jooqConverter
 				buffer.append( ", " );
 				if ( item.getReturn_expr( ) != null )
 				{
-					buffer.append( getExpressionJavaCode( item.getComparison_expr( ),
+					buffer.append( getExpressionJavaCode( item.getReturn_expr( ),
 							stmt,
 							column ) );
 				}
