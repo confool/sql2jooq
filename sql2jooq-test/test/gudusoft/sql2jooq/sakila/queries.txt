@@ -24,6 +24,11 @@ select country, city from country left join city using (country_id);
 select country, city, address from country left join city on city.country_id = country.country_id left join address on address.city_id = city.city_id;
 select country, city, address from country left join city using (country_id) left join address using (city_id);
 
+select country, city from city right join country on city.country_id = country.country_id;
+select country, city from city right join country using (country_id);
+select country, city, address from address right join city on address.city_id = city.city_id right join country on city.country_id = country.country_id;
+select country, city, address from address right join city using (city_id) right join country using (country_id);
+
 select null;
 select 1, +1, -1;
 

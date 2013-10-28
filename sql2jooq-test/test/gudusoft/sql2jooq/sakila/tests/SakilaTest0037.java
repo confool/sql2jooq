@@ -22,7 +22,7 @@ public class SakilaTest0037 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor order by actor_id limit 2";
+		String sql = "select * from (select 1 x) a join (select 1 y) b on a.x = b.y";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,11 +37,14 @@ public class SakilaTest0037 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field x = DSL.inline( 1 ).as("x");
+Table a = create.select( x ).asTable("a");
+Field y = DSL.inline( 1 ).as("y");
+Table b = create.select( y ).asTable("b");
 
 Result result = create.select(  )
-	.from( Actor.ACTOR )
-	.orderBy( ((Field)Actor.ACTOR.ACTOR_ID) )
-	.limit( 2 ).fetch( );
+	.from( a )
+	.join( b ).on( ((Field)a.field( "x" )).equal( ((Field)b.field( "y" )) ) ).fetch( );
 
 		return result;
 	}

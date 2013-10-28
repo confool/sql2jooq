@@ -22,7 +22,7 @@ public class SakilaTest0034 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where (select 1) = (select 1)";
+		String sql = "select 1 from (select 1) a";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,10 +37,10 @@ public class SakilaTest0034 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Table a = create.select( DSL.inline( 1 ) ).asTable("a");
 
 Result result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
-	.where( create.select( DSL.inline( 1 ) ).asField( ).equal( create.select( DSL.inline( 1 ) ).asField( ) ) ).fetch( );
+	.from( a ).fetch( );
 
 		return result;
 	}

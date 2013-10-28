@@ -22,7 +22,7 @@ public class SakilaTest0019 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where 'abc' regexp '.*b.*'";
+		String sql = "select null";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,9 +38,7 @@ public class SakilaTest0019 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
-	.where( DSL.inline( "abc" ).likeRegex( DSL.inline( ".*b.*" ) ) ).fetch( );
+Result result = create.select( DSL.inline( (Object)null ) ).fetch( );
 
 		return result;
 	}

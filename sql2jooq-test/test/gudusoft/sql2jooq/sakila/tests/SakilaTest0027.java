@@ -22,7 +22,7 @@ public class SakilaTest0027 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select count(*) c from actor)";
+		String sql = "select 1 from dual where 1 in (1, 2, 3)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,10 +37,10 @@ public class SakilaTest0027 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field c = DSL.count(  ).as("c");
 
-Result result = create.select( create.select( c )
-	.from( Actor.ACTOR ).asField( ) ).fetch( );
+Result result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.where( DSL.inline( 1 ).in( DSL.inline( 1 ), DSL.inline( 2 ), DSL.inline( 3 ) ) ).fetch( );
 
 		return result;
 	}
