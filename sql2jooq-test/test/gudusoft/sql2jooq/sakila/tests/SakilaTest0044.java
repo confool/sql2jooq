@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0043 extends MySQLTest
+public class SakilaTest0044 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor order by actor_id limit 3, 2";
+		String sql = "select * from actor order by actor_id limit 2 offset 3;";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{

@@ -22,7 +22,7 @@ public class SakilaTest0025 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select count(*) c from actor where first_name is null";
+		String sql = "select 1 from dual where 'abc' not regexp '.*x.*'";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,11 +37,10 @@ public class SakilaTest0025 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field c = DSL.count(  ).as("c");
 
-Result result = create.select( c )
-	.from( Actor.ACTOR )
-	.where( ((Field)Actor.ACTOR.FIRST_NAME).isNull(  ) ).fetch( );
+Result result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.where( DSL.inline( "abc" ).notLikeRegex( DSL.inline( ".*x.*" ) ) ).fetch( );
 
 		return result;
 	}

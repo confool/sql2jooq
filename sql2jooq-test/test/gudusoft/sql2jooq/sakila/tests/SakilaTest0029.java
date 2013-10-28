@@ -22,7 +22,7 @@ public class SakilaTest0029 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select 1)";
+		String sql = "select 1 from dual where 1 not in (2, 3, 4)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,7 +38,9 @@ public class SakilaTest0029 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( create.select( DSL.inline( 1 ) ).asField( ) ).fetch( );
+Result result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.where( DSL.inline( 1 ).notIn( DSL.inline( 2 ), DSL.inline( 3 ), DSL.inline( 4 ) ) ).fetch( );
 
 		return result;
 	}

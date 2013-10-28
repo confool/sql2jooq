@@ -22,7 +22,7 @@ public class SakilaTest0042 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor order by actor_id limit 3, 2";
+		String sql = "select * from actor order by actor_id limit 2";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -41,7 +41,7 @@ public class SakilaTest0042 extends MySQLTest
 Result result = create.select(  )
 	.from( Actor.ACTOR )
 	.orderBy( ((Field)Actor.ACTOR.ACTOR_ID) )
-	.limit( 3, 2 ).fetch( );
+	.limit( 2 ).fetch( );
 
 		return result;
 	}

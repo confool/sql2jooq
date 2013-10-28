@@ -22,7 +22,7 @@ public class SakilaTest0040 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor where (first_name, last_name) in (select first_name, last_name from customer)";
+		String sql = "select 1 from dual where ('a', 1) <> ('b', 2)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,10 +38,9 @@ public class SakilaTest0040 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select(  )
-	.from( Actor.ACTOR )
-	.where( DSL.row( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ).in( create.select( ((Field)Customer.CUSTOMER.FIRST_NAME), ((Field)Customer.CUSTOMER.LAST_NAME) )
-	.from( Customer.CUSTOMER ) ) ).fetch( );
+Result result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.where( DSL.row( DSL.inline( "a" ), DSL.inline( 1 ) ).notEqual( DSL.row( DSL.inline( "b" ), DSL.inline( 2 ) ) ) ).fetch( );
 
 		return result;
 	}

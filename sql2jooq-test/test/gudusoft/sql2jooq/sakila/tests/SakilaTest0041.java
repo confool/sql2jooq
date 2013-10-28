@@ -22,7 +22,7 @@ public class SakilaTest0041 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor order by actor_id limit 2";
+		String sql = "select * from actor where (first_name, last_name) in (select first_name, last_name from customer)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,8 +40,8 @@ public class SakilaTest0041 extends MySQLTest
 
 Result result = create.select(  )
 	.from( Actor.ACTOR )
-	.orderBy( ((Field)Actor.ACTOR.ACTOR_ID) )
-	.limit( 2 ).fetch( );
+	.where( DSL.row( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ).in( create.select( ((Field)Customer.CUSTOMER.FIRST_NAME), ((Field)Customer.CUSTOMER.LAST_NAME) )
+	.from( Customer.CUSTOMER ) ) ).fetch( );
 
 		return result;
 	}

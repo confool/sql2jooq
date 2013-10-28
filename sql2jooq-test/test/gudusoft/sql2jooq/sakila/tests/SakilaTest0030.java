@@ -22,7 +22,7 @@ public class SakilaTest0030 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select (select 1) a";
+		String sql = "select (select 1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,9 +37,8 @@ public class SakilaTest0030 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field a = create.select( DSL.inline( 1 ) ).asField("a");
 
-Result result = create.select( a ).fetch( );
+Result result = create.select( create.select( DSL.inline( 1 ) ).asField( ) ).fetch( );
 
 		return result;
 	}

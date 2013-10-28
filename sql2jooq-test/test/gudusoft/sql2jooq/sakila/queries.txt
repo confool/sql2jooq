@@ -19,6 +19,11 @@ from city c
 join country co 
   on c.country_id = co.country_id;
 
+select c.city, co.country
+from city c 
+inner join country co 
+  on c.country_id = co.country_id;
+
 select country, city from country left join city on city.country_id = country.country_id;
 select country, city from country left join city using (country_id);
 select country, city, address from country left join city on city.country_id = country.country_id left join address on address.city_id = city.city_id;

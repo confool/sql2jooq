@@ -22,7 +22,7 @@ public class SakilaTest0039 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual where ('a', 1) <> ('b', 2)";
+		String sql = "select 1 from dual where (select 1) = (select 1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0039 extends MySQLTest
 
 Result result = create.select( DSL.inline( 1 ) )
 	.from( DSL.dual() )
-	.where( DSL.row( DSL.inline( "a" ), DSL.inline( 1 ) ).notEqual( DSL.row( DSL.inline( "b" ), DSL.inline( 2 ) ) ) ).fetch( );
+	.where( create.select( DSL.inline( 1 ) ).asField( ).equal( create.select( DSL.inline( 1 ) ).asField( ) ) ).fetch( );
 
 		return result;
 	}

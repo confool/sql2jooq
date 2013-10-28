@@ -22,7 +22,7 @@ public class SakilaTest0014 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select country, city, address from country left join city using (country_id) left join address using (city_id)";
+		String sql = "select country, city, address from country left join city on city.country_id = country.country_id left join address on address.city_id = city.city_id";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,8 +40,8 @@ public class SakilaTest0014 extends MySQLTest
 
 Result result = create.select( ((Field)Country.COUNTRY.COUNTRY_), ((Field)City.CITY.CITY_), ((Field)Address.ADDRESS.ADDRESS_) )
 	.from( Country.COUNTRY )
-	.leftOuterJoin( City.CITY ).using( new Field[]{((Field)City.CITY.COUNTRY_ID)} )
-	.leftOuterJoin( Address.ADDRESS ).using( new Field[]{((Field)City.CITY.CITY_ID)} ).fetch( );
+	.leftOuterJoin( City.CITY ).on( ((Field)City.CITY.COUNTRY_ID).equal( ((Field)Country.COUNTRY.COUNTRY_ID) ) )
+	.leftOuterJoin( Address.ADDRESS ).on( ((Field)Address.ADDRESS.CITY_ID).equal( ((Field)City.CITY.CITY_ID) ) ).fetch( );
 
 		return result;
 	}
