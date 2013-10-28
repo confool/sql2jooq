@@ -88,6 +88,7 @@ where actor_id < 10;
 
 select if (1 < 2, 1, 2), if (1 > 2, 1, 2);
 select if (1 < 2, 1, 2) a, if (1 > 2, 1, 2) b;
+select if (actor_id = 1, 1, null) a from actor where actor_id < 10;
 select ifnull(1, 2), ifnull(null, 2);
 select ifnull(1, 2) a, ifnull(null, 2) b;
 select nullif(1, 2), nullif(1, 1);

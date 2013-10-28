@@ -38,7 +38,7 @@ public class SakilaTest0052 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.if ( , DSL.inline( 1 ), DSL.inline( 2 ) ), DSL.if ( , DSL.inline( 1 ), DSL.inline( 2 ) ) ).fetch( );
+Result result = create.select( DSL.field( "if (1 < 2, 1, 2)" ), DSL.field( "if (1 > 2, 1, 2)" ) ).fetch( );
 
 		return result;
 	}
