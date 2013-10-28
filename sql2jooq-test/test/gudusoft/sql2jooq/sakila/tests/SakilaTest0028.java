@@ -37,10 +37,10 @@ public class SakilaTest0028 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Table a = create.select( DSL.inline( 1 ).as("x") )
-	.from(  ).asTable("a");
+Field x = DSL.inline( 1 ).as("x");
+Table a = create.select( x ).asTable("a");
 
-Result result = create.select( ((Field)a.X) )
+Result result = create.select( ((Field)a.field( "x" )) )
 	.from( a ).fetch( );
 
 		return result;

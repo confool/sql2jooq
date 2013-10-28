@@ -38,8 +38,7 @@ public class SakilaTest0012 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.inline( 1 ), DSL.inline( 1 ), DSL.inline( 1 ).neg(  ) )
-	.from(  ).fetch( );
+Result result = create.select( DSL.inline( 1 ), DSL.inline( 1 ), DSL.inline( 1 ).neg(  ) ).fetch( );
 
 		return result;
 	}

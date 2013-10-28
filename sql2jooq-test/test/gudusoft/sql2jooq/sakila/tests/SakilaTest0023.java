@@ -37,9 +37,10 @@ public class SakilaTest0023 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field c = DSL.count(  ).as("c");
 
-Result result = create.select(  )
-	.from(  ).fetch( );
+Result result = create.select( create.select( c )
+	.from( Actor.ACTOR ).asField( ) ).fetch( );
 
 		return result;
 	}

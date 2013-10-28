@@ -40,9 +40,7 @@ public class SakilaTest0030 extends MySQLTest
 
 Result result = create.select( DSL.inline( 1 ) )
 	.from( DSL.dual() )
-	.where( create.select( DSL.inline( 1 ) )
-	.from(  ).equal( create.select( DSL.inline( 1 ) )
-	.from(  ) ) ).fetch( );
+	.where( create.select( DSL.inline( 1 ) ).asField( ).equal( create.select( DSL.inline( 1 ) ).asField( ) ) ).fetch( );
 
 		return result;
 	}

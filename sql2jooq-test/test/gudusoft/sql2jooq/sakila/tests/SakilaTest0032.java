@@ -40,7 +40,7 @@ public class SakilaTest0032 extends MySQLTest
 
 Result result = create.select(  )
 	.from( Actor.ACTOR )
-	.where( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME).in( create.select( ((Field)Customer.CUSTOMER.FIRST_NAME), ((Field)Customer.CUSTOMER.LAST_NAME) )
+	.where( DSL.row( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ).in( create.select( ((Field)Customer.CUSTOMER.FIRST_NAME), ((Field)Customer.CUSTOMER.LAST_NAME) )
 	.from( Customer.CUSTOMER ) ) ).fetch( );
 
 		return result;
