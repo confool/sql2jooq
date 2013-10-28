@@ -22,7 +22,7 @@ public class SakilaTest0043 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select * from actor order by actor_id limit 3, 2";
+		String sql = "select first_name f, last_name l, actor_id a from actor order by f, l, a";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -37,11 +37,13 @@ public class SakilaTest0043 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
+Field f = ((Field)Actor.ACTOR.FIRST_NAME).as("f");
+Field l = ((Field)Actor.ACTOR.LAST_NAME).as("l");
+Field a = ((Field)Actor.ACTOR.ACTOR_ID).as("a");
 
-Result result = create.select(  )
+Result result = create.select( f, l, a )
 	.from( Actor.ACTOR )
-	.orderBy( ((Field)Actor.ACTOR.ACTOR_ID) )
-	.limit( 3, 2 ).fetch( );
+	.orderBy( f, l, a ).fetch( );
 
 		return result;
 	}

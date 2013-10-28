@@ -16,13 +16,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
-public class SakilaTest0044 extends MySQLTest
+public class SakilaTest0050 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select first_name, last_name, actor_id from actor order by 2, 1, 3";
+		String sql = "select first_name, last_name, count(*) from actor group by first_name, last_name with rollup;";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -36,11 +36,7 @@ public class SakilaTest0044 extends MySQLTest
 	
 	private static Result generatedSQL( Connection conn )
 	{
-		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-
-Result result = create.select( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME), ((Field)Actor.ACTOR.ACTOR_ID) )
-	.from( Actor.ACTOR )
-	.orderBy( DSL.inline( 2 ), DSL.inline( 1 ), DSL.inline( 3 ) ).fetch( );
+		
 
 		return result;
 	}

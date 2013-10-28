@@ -22,7 +22,7 @@ public class SakilaTest0046 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select first_name, last_name, count(*) from actor group by first_name, last_name having count(*) > 1";
+		String sql = "select * from actor order by actor_id limit 3, 2";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -38,10 +38,10 @@ public class SakilaTest0046 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME), DSL.count(  ) )
+Result result = create.select(  )
 	.from( Actor.ACTOR )
-	.groupBy( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) )
-	.having( DSL.count(  ).greaterThan( DSL.inline( 1 ) ) ).fetch( );
+	.orderBy( ((Field)Actor.ACTOR.ACTOR_ID) )
+	.limit( 3, 2 ).fetch( );
 
 		return result;
 	}
