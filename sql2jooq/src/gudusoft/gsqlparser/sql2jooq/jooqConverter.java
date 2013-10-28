@@ -1339,7 +1339,8 @@ public class jooqConverter
 					stmt,
 					column ) );
 
-			if ( !operation.equals( "in" ) && !operation.equals( "notIn" )
+			if ( !operation.equals( "in" )
+					&& !operation.equals( "notIn" )
 					&& expression.getRightOperand( ).getExpressionType( ) == EExpressionType.subquery_t )
 			{
 				buffer.append( ".asField( )" );
@@ -1928,7 +1929,7 @@ public class jooqConverter
 		String content = function.toString( ).toLowerCase( );
 		content = content.substring( 0, content.indexOf( '(' ) );
 		buffer.append( "DSL." );
-		buffer.append( content );
+		buffer.append( convertFunctionToDSLMethod( content ) );
 		buffer.append( "( " );
 		for ( int i = 0; i < function.getArgs( ).size( ); i++ )
 		{
@@ -1973,6 +1974,13 @@ public class jooqConverter
 		}
 		buffer.append( " )" );
 		return buffer.toString( );
+	}
+
+	private Object convertFunctionToDSLMethod( String function )
+	{
+		if ( function.equalsIgnoreCase( "IFNULL" ) )
+			return "nvl";
+		return function;
 	}
 
 	private String getObjectColumnName( String columnName,
