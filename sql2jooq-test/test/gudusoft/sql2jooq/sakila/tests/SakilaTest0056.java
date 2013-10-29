@@ -23,7 +23,7 @@ public class SakilaTest0056 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select ifnull(1, 2), ifnull(null, 2)";
+		String sql = "select if (actor_id = 1, 1, null) a from actor where actor_id < 10";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -39,7 +39,9 @@ public class SakilaTest0056 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.nvl( DSL.inline( 1 ), DSL.inline( 2 ) ), DSL.nvl( DSL.inline( (Object)null ), DSL.inline( 2 ) ) ).fetch( );
+Result result = create.select( DSL.field( "if (actor_id = 1, 1, null)" ) )
+	.from( Actor.ACTOR )
+	.where( ((Field)Actor.ACTOR.ACTOR_ID).lessThan( DSL.inline( 10 ) ) ).fetch( );
 
 		return result;
 	}

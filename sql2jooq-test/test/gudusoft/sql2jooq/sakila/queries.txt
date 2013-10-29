@@ -72,6 +72,7 @@ select * from actor order by actor_id limit 2 offset 3;
 
 select first_name, last_name, count(*) from actor group by first_name, last_name order by count(*) desc limit 1;
 select first_name, last_name, count(*) from actor group by first_name, last_name having count(*) > 1;
+select first_name, last_name, count(*) from actor group by first_name, last_name with rollup;
 
 select case actor_id when 1 then 1 end from actor where actor_id < 10;
 select 

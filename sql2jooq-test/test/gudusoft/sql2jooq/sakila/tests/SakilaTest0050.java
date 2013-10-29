@@ -23,7 +23,7 @@ public class SakilaTest0050 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select case actor_id when 1 then 1 end from actor where actor_id < 10";
+		String sql = "select first_name, last_name, count(*) from actor group by first_name, last_name with rollup";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -39,9 +39,9 @@ public class SakilaTest0050 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.decode( ).value( ((Field)Actor.ACTOR.ACTOR_ID) ).when( DSL.inline( 1 ), DSL.inline( 1 ) ) )
+Result result = create.select( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME), DSL.count(  ) )
 	.from( Actor.ACTOR )
-	.where( ((Field)Actor.ACTOR.ACTOR_ID).lessThan( DSL.inline( 10 ) ) ).fetch( );
+	.groupBy( DSL.rollup( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ) ).fetch( );
 
 		return result;
 	}
