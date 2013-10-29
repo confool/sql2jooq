@@ -633,6 +633,11 @@ public class jooqConverter
 		if ( stmt.getGroupByClause( ) != null )
 		{
 			buffer.append( ".groupBy( " );
+			boolean isRollUp = stmt.getGroupByClause( ).isRollupModifier( );
+			if ( isRollUp )
+			{
+				buffer.append( "DSL.rollup( " );
+			}
 			TGroupByItemList items = stmt.getGroupByClause( ).getItems( );
 			for ( int i = 0; i < items.size( ); i++ )
 			{
@@ -643,6 +648,10 @@ public class jooqConverter
 					buffer.append( ", " );
 				}
 			}
+			if ( isRollUp )
+			{
+				buffer.append( " )" );
+			}
 			buffer.append( " )\n\t" );
 
 			if ( stmt.getGroupByClause( ).getHavingClause( ) != null )
@@ -652,6 +661,7 @@ public class jooqConverter
 						.getHavingClause( ), stmt ) );
 				buffer.append( " )\n\t" );
 			}
+
 		}
 		return buffer.toString( );
 	}
@@ -976,7 +986,8 @@ public class jooqConverter
 						+ expression.toString( )
 						+ "\" )" );
 			}
-			else throw e;
+			else
+				throw e;
 		}
 		return buffer.toString( );
 	}
