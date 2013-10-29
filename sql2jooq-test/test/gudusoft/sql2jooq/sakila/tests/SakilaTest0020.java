@@ -16,6 +16,7 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
 /**
  * @author Lukas Eder
  */
+@SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
 public class SakilaTest0020 extends MySQLTest
 {
 
