@@ -59,6 +59,45 @@ public class jooqConverter
 	private boolean ignoreGeneric = false;
 	private TGSqlParser sqlparser;
 
+	private List<String> functions = new ArrayList<String>( );
+	{
+		functions.add( "DSL.count(" );
+		functions.add( "DSL.ascii(" );
+		functions.add( "DSL.bitLength(" );
+		functions.add( "DSL.charLength(" );
+		functions.add( "DSL.position(" );
+		functions.add( "DSL.length(" );
+		functions.add( "DSL.octetLength(" );
+		functions.add( "DSL.left(" );
+		functions.add( "DSL.concat(" );
+		functions.add( "DSL.left(" );
+		functions.add( "DSL.lower(" );
+		functions.add( "DSL.lpad(" );
+		functions.add( "DSL.ltrim(" );
+		functions.add( "DSL.mid(" );
+		functions.add( "DSL.repeat(" );
+		functions.add( "DSL.replace(" );
+		functions.add( "DSL.reverse(" );
+		functions.add( "DSL.right(" );
+		functions.add( "DSL.rpad(" );
+		functions.add( "DSL.rtrim(" );
+		functions.add( "DSL.substring(" );
+		functions.add( "DSL.trim(" );
+		functions.add( "DSL.upper(" );
+		functions.add( "MySQLDSL.aesDecrypt(" );
+		functions.add( "MySQLDSL.aesEncrypt(" );
+		functions.add( "MySQLDSL.compress(" );
+		functions.add( "MySQLDSL.decode(" );
+		functions.add( "MySQLDSL.desDecrypt(" );
+		functions.add( "MySQLDSL.desEncrypt(" );
+		functions.add( "MySQLDSL.encode(" );
+		functions.add( "MySQLDSL.uncompress(" );
+		functions.add( "MySQLDSL.uncompressedLength(" );
+		functions.add( "MySQLDSL.sha1(" );
+		functions.add( "MySQLDSL.sha2(" );
+		functions.add( "MySQLDSL.password(" );
+	}
+
 	public DatabaseMetaData getMetadata( )
 	{
 		return metadata;
@@ -733,6 +772,23 @@ public class jooqConverter
 		}
 	}
 
+	private String getOutermostFunction( String javaCode )
+	{
+		int index = -1;
+		String function = null;
+		for ( int i = 0; i < functions.size( ); i++ )
+		{
+			String func = functions.get( i );
+			int funcIndex = javaCode.indexOf( func );
+			if ( funcIndex != -1 && ( index == -1 || funcIndex < index ) )
+			{
+				index = funcIndex;
+				function = func;
+			}
+		}
+		return function;
+	}
+
 	private String guessExpressionJavaTypeClass( String javaCode )
 	{
 		List<String> javaClasses = DatabaseMetaUtil.getDataTypeClassNames( );
@@ -743,10 +799,54 @@ public class jooqConverter
 				return className;
 		}
 
-		if ( javaCode.indexOf( "DSL.count(" ) > -1 )
+		String function = getOutermostFunction( javaCode );
+
+		if ( function != null )
 		{
-			return Integer.class.getName( );
+			if ( function.indexOf( "DSL.count(" ) > -1
+					|| function.indexOf( "DSL.ascii(" ) > -1
+					|| function.indexOf( "DSL.bitLength(" ) > -1
+					|| function.indexOf( "DSL.charLength(" ) > -1
+					|| function.indexOf( "DSL.position(" ) > -1
+					|| function.indexOf( "DSL.length(" ) > -1
+					|| function.indexOf( "DSL.octetLength(" ) > -1
+					|| function.indexOf( "DSL.uncompressedLength(" ) > -1 )
+			{
+				return Integer.class.getName( );
+			}
+
+			if ( function.indexOf( "DSL.left(" ) > -1
+					|| function.indexOf( "DSL.concat(" ) > -1
+					|| function.indexOf( "DSL.left(" ) > -1
+					|| function.indexOf( "DSL.lower(" ) > -1
+					|| function.indexOf( "DSL.lpad(" ) > -1
+					|| function.indexOf( "DSL.ltrim(" ) > -1
+					|| function.indexOf( "DSL.mid(" ) > -1
+					|| function.indexOf( "DSL.repeat(" ) > -1
+					|| function.indexOf( "DSL.replace(" ) > -1
+					|| function.indexOf( "DSL.reverse(" ) > -1
+					|| function.indexOf( "DSL.right(" ) > -1
+					|| function.indexOf( "DSL.rpad(" ) > -1
+					|| function.indexOf( "DSL.rtrim(" ) > -1
+					|| function.indexOf( "DSL.substr(" ) > -1
+					|| function.indexOf( "DSL.trim(" ) > -1
+					|| function.indexOf( "DSL.upper(" ) > -1
+					|| function.indexOf( "MySQLDSL.aesDecrypt(" ) > -1
+					|| function.indexOf( "MySQLDSL.aesEncrypt(" ) > -1
+					|| function.indexOf( "MySQLDSL.compress(" ) > -1
+					|| function.indexOf( "MySQLDSL.decode(" ) > -1
+					|| function.indexOf( "MySQLDSL.desDecrypt(" ) > -1
+					|| function.indexOf( "MySQLDSL.desEncrypt(" ) > -1
+					|| function.indexOf( "MySQLDSL.encode(" ) > -1
+					|| function.indexOf( "MySQLDSL.uncompress(" ) > -1
+					|| function.indexOf( "MySQLDSL.sha1(" ) > -1
+					|| function.indexOf( "MySQLDSL.sha2(" ) > -1
+					|| function.indexOf( "MySQLDSL.password(" ) > -1 )
+			{
+				return String.class.getName( );
+			}
 		}
+
 		if ( metadata != null )
 		{
 			String[] tableNames = metadata.getTableNames( );
@@ -1977,51 +2077,142 @@ public class jooqConverter
 		}
 		else
 		{
-			buffer.append( "DSL." );
+			if ( isMysqlDSL( content ) )
+			{
+				buffer.append( "MySQLDSL." );
+			}
+			else
+			{
+				buffer.append( "DSL." );
+			}
+
 			buffer.append( convertFunctionToDSLMethod( content ) );
 			buffer.append( "( " );
-			for ( int i = 0; i < function.getArgs( ).size( ); i++ )
+			if ( function.getArgs( ) != null )
 			{
-				TExpression arg = function.getArgs( ).getExpression( i );
-				if ( arg.toString( ).indexOf( '*' ) != -1 )
+				int argLength = function.getArgs( ).size( );
+				for ( int i = 0; i < argLength; i++ )
 				{
-					if ( arg.toString( ).trim( ).length( ) == 1 )
+					TExpression arg = function.getArgs( ).getExpression( i );
+					buffer.append( getFunctionArgExpressionJavaCode( arg,
+							i,
+							argLength,
+							stmt,
+							columns ) );
+				}
+			}
+			else
+			{
+				if ( function.getExpr3( ) != null )
+				{
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+							0,
+							3,
+							stmt,
+							columns ) );
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
+							1,
+							3,
+							stmt,
+							columns ) );
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr3( ),
+							0,
+							3,
+							stmt,
+							columns ) );
+				}
+				else if ( function.getExpr2( ) != null )
+				{
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+							0,
+							2,
+							stmt,
+							columns ) );
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
+							1,
+							2,
+							stmt,
+							columns ) );
+				}
+				else if ( function.getExpr1( ) != null )
+				{
+					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+							0,
+							1,
+							stmt,
+							columns ) );
+				}
+				else if ( function.getExprList( ) != null )
+				{
+					int argLength = function.getExprList( ).size( );
+					for ( int i = 0; i < function.getExprList( ).size( ); i++ )
 					{
-						continue;
-					}
-					else
-					{
-						buffer.append( arg.toString( )
-								.replace( "*", "" )
-								.toLowerCase( ) );
-						if ( i < function.getArgs( ).size( ) - 1 )
-						{
-							buffer.append( ", " );
-						}
+						TExpression arg = function.getExprList( )
+								.getExpression( i );
+						buffer.append( getFunctionArgExpressionJavaCode( arg,
+								i,
+								argLength,
+								stmt,
+								columns ) );
 					}
 				}
-				else
+				else if ( function.getTrimArgument( ) != null )
 				{
-					ColumnMetaData column = null;
-					if ( columns != null )
-					{
-						if ( columns.length > i )
-						{
-							column = columns[i];
-						}
-						else if ( columns.length >= 1 )
-						{
-							column = columns[0];
-						}
-					}
-					buffer.append( getExpressionColumnName( arg, stmt, column ) );
-					if ( i < function.getArgs( ).size( ) - 1 )
-					{
-						buffer.append( ", " );
-					}
+					TExpression expr = function.getTrimArgument( )
+							.getStringExpression( );
+					buffer.append( getFunctionArgExpressionJavaCode( expr,
+							0,
+							1,
+							stmt,
+							columns ) );
 				}
 			}
 			buffer.append( " )" );
+		}
+		return buffer.toString( );
+	}
+
+	private String getFunctionArgExpressionJavaCode( TExpression argExpression,
+			int argIndex, int argLength, TCustomSqlStatement stmt,
+			ColumnMetaData[] columns )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		if ( argExpression.toString( ).indexOf( '*' ) != -1 )
+		{
+			if ( argExpression.toString( ).trim( ).length( ) == 1 )
+			{
+				return buffer.toString( );
+			}
+			else
+			{
+				buffer.append( argExpression.toString( )
+						.replace( "*", "" )
+						.toLowerCase( ) );
+				if ( argIndex < argLength - 1 )
+				{
+					buffer.append( ", " );
+				}
+			}
+		}
+		else
+		{
+			ColumnMetaData column = null;
+			if ( columns != null )
+			{
+				if ( columns.length > argIndex )
+				{
+					column = columns[argIndex];
+				}
+				else if ( columns.length >= 1 )
+				{
+					column = columns[0];
+				}
+			}
+			buffer.append( getExpressionJavaCode( argExpression, stmt, column ) );
+			if ( argIndex < argLength - 1 )
+			{
+				buffer.append( ", " );
+			}
 		}
 		return buffer.toString( );
 	}
@@ -2032,13 +2223,76 @@ public class jooqConverter
 		{
 			return false;
 		}
+		if ( function.equalsIgnoreCase( "TO_BASE64" ) )
+		{
+			return false;
+		}
 		return true;
 	}
 
-	private Object convertFunctionToDSLMethod( String function )
+	private boolean isMysqlDSL( String function )
+	{
+		if ( function.equalsIgnoreCase( "AES_DECRYPT" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "AES_ENCRYPT" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "DES_DECRYPT" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "DES_ENCRYPT" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "UNCOMPRESSED_LENGTH" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "COMPRESS" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "DECODE" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "ENCODE" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "UNCOMPRESS" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "SHA1" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "SHA2" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "PASSWORD" ) )
+			return true;
+		return false;
+	}
+
+	private String convertFunctionToDSLMethod( String function )
 	{
 		if ( function.equalsIgnoreCase( "IFNULL" ) )
 			return "nvl";
+		if ( function.equalsIgnoreCase( "BIT_LENGTH" ) )
+			return "bitLength";
+		if ( function.equalsIgnoreCase( "CHAR_LENGTH" )
+				|| function.equalsIgnoreCase( "CHARACTER_LENGTH" ) )
+			return "charLength";
+		if ( function.equalsIgnoreCase( "INSTR" ) )
+			return "position";
+		if ( function.equalsIgnoreCase( "LOCATE" ) )
+			return "position";
+		if ( function.equalsIgnoreCase( "OCTET_LENGTH" ) )
+			return "octetLength";
+		if ( function.equalsIgnoreCase( "SUBSTR" ) )
+			return "substring";
+		if ( function.equalsIgnoreCase( "UCASE" ) )
+			return "upper";
+		if ( function.equalsIgnoreCase( "UCASE" ) )
+			return "upper";
+		if ( function.equalsIgnoreCase( "LCASE" ) )
+			return "lower";
+		if ( function.equalsIgnoreCase( "AES_DECRYPT" ) )
+			return "aesDecrypt";
+		if ( function.equalsIgnoreCase( "AES_ENCRYPT" ) )
+			return "aesEncrypt";
+		if ( function.equalsIgnoreCase( "DES_DECRYPT" ) )
+			return "desDecrypt";
+		if ( function.equalsIgnoreCase( "DES_ENCRYPT" ) )
+			return "desEncrypt";
+		if ( function.equalsIgnoreCase( "UNCOMPRESSED_LENGTH" ) )
+			return "uncompressedLength";
+
 		return function;
 	}
 
@@ -2138,6 +2392,11 @@ public class jooqConverter
 			if ( table == null && tables.size( ) > 0 )
 			{
 				table = tables.get( 0 );
+			}
+
+			if ( table == null )
+			{
+				return columnName;
 			}
 
 			if ( table.getTableName( ) != null
