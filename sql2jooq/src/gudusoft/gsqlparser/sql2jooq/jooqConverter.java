@@ -37,6 +37,7 @@ import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +87,11 @@ public class jooqConverter
 		unsupportFunctions.add( "RAND" );
 	}
 
+	private List<String> supportFunctions = new ArrayList<String>( );
+	{
+		supportFunctions.add( "(?i)RAND\\(\\s*\\)" );
+	}
+
 	private List<String> intTypefunctions = new ArrayList<String>( );
 	{
 		intTypefunctions.add( "DSL.count(" );
@@ -96,6 +102,11 @@ public class jooqConverter
 		intTypefunctions.add( "DSL.length(" );
 		intTypefunctions.add( "DSL.octetLength(" );
 		intTypefunctions.add( "MySQLDSL.uncompressedLength(" );
+	}
+	
+	private List<String> bigDecimalTypefunctions = new ArrayList<String>( );
+	{
+		bigDecimalTypefunctions.add( "DSL.rand(" );
 	}
 
 	private List<String> stringTypefunctions = new ArrayList<String>( );
@@ -132,6 +143,7 @@ public class jooqConverter
 	private List<String> fixTypeFunctions = new ArrayList<String>( );
 	{
 		fixTypeFunctions.addAll( intTypefunctions );
+		fixTypeFunctions.addAll( bigDecimalTypefunctions );
 		fixTypeFunctions.addAll( stringTypefunctions );
 	}
 
@@ -853,6 +865,14 @@ public class jooqConverter
 				if ( function.indexOf( stringTypefunctions.get( i ) ) > -1 )
 				{
 					return String.class.getName( );
+				}
+			}
+			
+			for ( int i = 0; i < bigDecimalTypefunctions.size( ); i++ )
+			{
+				if ( function.indexOf( bigDecimalTypefunctions.get( i ) ) > -1 )
+				{
+					return BigDecimal.class.getName( );
 				}
 			}
 		}
@@ -2081,14 +2101,16 @@ public class jooqConverter
 	{
 		StringBuffer buffer = new StringBuffer( );
 		TFunctionCall function = expression.getFunctionCall( );
-		String content = function.toString( ).toLowerCase( );
-		content = content.substring( 0, content.indexOf( '(' ) ).trim( );;
-		if ( !supportFunction( content ) )
+
+		if ( !supportFunction( function ) )
 		{
 			throw new PlainSQLException( expression, stmt );
 		}
 		else
 		{
+			String content = function.toString( ).toLowerCase( );
+			content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+
 			if ( isMysqlDSL( content ) )
 			{
 				buffer.append( "MySQLDSL." );
@@ -2229,14 +2251,32 @@ public class jooqConverter
 		return buffer.toString( );
 	}
 
-	private boolean supportFunction( String function )
+	private boolean supportFunction( TFunctionCall function )
 	{
+		String content = function.toString( ).toLowerCase( );
+		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+		boolean flag = false;
 		for ( int i = 0; i < unsupportFunctions.size( ); i++ )
 		{
-			if ( unsupportFunctions.get( i ).equalsIgnoreCase( function ) )
-				return false;
+			if ( unsupportFunctions.get( i ).equalsIgnoreCase( content ) )
+			{
+				flag = true;
+				break;
+			}
 		}
-		return true;
+		if ( flag )
+		{
+			for ( int i = 0; i < supportFunctions.size( ); i++ )
+			{
+				String pattern = supportFunctions.get( i );
+				if ( function.toString( ).matches( pattern ) )
+				{
+					flag = false;
+					break;
+				}
+			}
+		}
+		return !flag;
 	}
 
 	private boolean isMysqlDSL( String function )
