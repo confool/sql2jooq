@@ -110,9 +110,12 @@ public class jooqConverter
 		unsupportFunctions.add( "ENCRYPT" );
 		unsupportFunctions.add( "OLD_PASSWORD" );
 		unsupportFunctions.add( "VALIDATE_PASSWORD_STRENGTH" );
-		
+
 		unsupportFunctions.add( "ExtractValue" );
 		unsupportFunctions.add( "UpdateXML" );
+
+		unsupportFunctions.add( "CONV" );
+		unsupportFunctions.add( "CRC32" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -131,11 +134,70 @@ public class jooqConverter
 		intTypefunctions.add( "DSL.length(" );
 		intTypefunctions.add( "DSL.octetLength(" );
 		intTypefunctions.add( "MySQLDSL.uncompressedLength(" );
+		intTypefunctions.add( "DSL.dateDiff(" );
+		intTypefunctions.add( "DSL.day(" );
+		intTypefunctions.add( "DSL.denseRank(" );
+		intTypefunctions.add( "DSL.extract(" );
+		intTypefunctions.add( "DSL.grouping(" );
+		intTypefunctions.add( "DSL.groupingId(" );
+		intTypefunctions.add( "DSL.hour(" );
+		intTypefunctions.add( "DSL.level(" );
+		intTypefunctions.add( "DSL.minute(" );
+		intTypefunctions.add( "DSL.month(" );
+		intTypefunctions.add( "DSL.ntile(" );
+		intTypefunctions.add( "DSL.one(" );
+		intTypefunctions.add( "DSL.rank(" );
+		intTypefunctions.add( "DSL.rowNumber(" );
+		intTypefunctions.add( "DSL.second(" );
+		intTypefunctions.add( "DSL.sign(" );
+		intTypefunctions.add( "DSL.two(" );
+		intTypefunctions.add( "DSL.year(" );
+		intTypefunctions.add( "DSL.zero(" );
 	}
 
 	private List<String> bigDecimalTypefunctions = new ArrayList<String>( );
 	{
 		bigDecimalTypefunctions.add( "DSL.rand(" );
+		bigDecimalTypefunctions.add( "DSL.deg(" );
+		bigDecimalTypefunctions.add( "DSL.rad(" );
+		bigDecimalTypefunctions.add( "DSL.acos(" );
+		bigDecimalTypefunctions.add( "DSL.asin(" );
+		bigDecimalTypefunctions.add( "DSL.atan(" );
+		bigDecimalTypefunctions.add( "DSL.atan2(" );
+		bigDecimalTypefunctions.add( "DSL.avg(" );
+		bigDecimalTypefunctions.add( "DSL.avgDistinct(" );
+		bigDecimalTypefunctions.add( "DSL.cos(" );
+		bigDecimalTypefunctions.add( "DSL.cosh(" );
+		bigDecimalTypefunctions.add( "DSL.cot(" );
+		bigDecimalTypefunctions.add( "DSL.coth(" );
+		bigDecimalTypefunctions.add( "DSL.cumeDist(" );
+		bigDecimalTypefunctions.add( "DSL.e(" );
+		bigDecimalTypefunctions.add( "DSL.exp(" );
+		bigDecimalTypefunctions.add( "DSL.ln(" );
+		bigDecimalTypefunctions.add( "DSL.log(" );
+		bigDecimalTypefunctions.add( "DSL.median(" );
+		bigDecimalTypefunctions.add( "DSL.percentRank(" );
+		bigDecimalTypefunctions.add( "DSL.pi(" );
+		bigDecimalTypefunctions.add( "DSL.power(" );
+		bigDecimalTypefunctions.add( "DSL.regrAvgX(" );
+		bigDecimalTypefunctions.add( "DSL.regrCount(" );
+		bigDecimalTypefunctions.add( "DSL.regrIntercept(" );
+		bigDecimalTypefunctions.add( "DSL.regrR2(" );
+		bigDecimalTypefunctions.add( "DSL.regrSlope(" );
+		bigDecimalTypefunctions.add( "DSL.regrSXX(" );
+		bigDecimalTypefunctions.add( "DSL.regrSXY(" );
+		bigDecimalTypefunctions.add( "DSL.regrSYY(" );
+		bigDecimalTypefunctions.add( "DSL.sin(" );
+		bigDecimalTypefunctions.add( "DSL.sinh(" );
+		bigDecimalTypefunctions.add( "DSL.sqrt(" );
+		bigDecimalTypefunctions.add( "DSL.stddevPop(" );
+		bigDecimalTypefunctions.add( "DSL.stddevSamp(" );
+		bigDecimalTypefunctions.add( "DSL.sum(" );
+		bigDecimalTypefunctions.add( "DSL.sumDistinct(" );
+		bigDecimalTypefunctions.add( "DSL.tan(" );
+		bigDecimalTypefunctions.add( "DSL.tanh(" );
+		bigDecimalTypefunctions.add( "DSL.varPop(" );
+		bigDecimalTypefunctions.add( "DSL.varSamp(" );
 	}
 
 	private List<String> stringTypefunctions = new ArrayList<String>( );
@@ -157,6 +219,9 @@ public class jooqConverter
 		stringTypefunctions.add( "DSL.upper(" );
 		stringTypefunctions.add( "DSL.currentUser(" );
 		stringTypefunctions.add( "DSL.md5(" );
+		stringTypefunctions.add( "DSL.escape(" );
+		stringTypefunctions.add( "DSL.listAgg(" );
+		stringTypefunctions.add( "DSL.sysConnectByPath(" );
 		stringTypefunctions.add( "MySQLDSL.aesDecrypt(" );
 		stringTypefunctions.add( "MySQLDSL.aesEncrypt(" );
 		stringTypefunctions.add( "MySQLDSL.compress(" );
@@ -930,6 +995,11 @@ public class jooqConverter
 		Matcher matcher = pattern.matcher( javaCode );
 		if ( matcher.find( ) )
 			return String.class.getName( );
+
+		pattern = Pattern.compile( "\\d+\\.\\d+" );
+		matcher = pattern.matcher( javaCode );
+		if ( matcher.find( ) )
+			return Double.class.getName( );
 
 		pattern = Pattern.compile( "\\d+" );
 		matcher = pattern.matcher( javaCode );
@@ -2181,14 +2251,84 @@ public class jooqConverter
 				buffer.append( "DSL." );
 			}
 
+			if ( needCompileFunction( function ) )
+			{
+				buffer.append( compileFunction( function, stmt, columns ) );
+				return buffer.toString( );
+			}
+
 			buffer.append( convertFunctionToDSLMethod( content ) );
 			buffer.append( "( " );
-			if ( function.getArgs( ) != null )
+			buffer.append( getFunctionArgsJavaCode( function, stmt, columns ) );
+			buffer.append( " )" );
+		}
+		return buffer.toString( );
+	}
+
+	private String getFunctionArgsJavaCode( TFunctionCall function,
+			TCustomSqlStatement stmt, ColumnMetaData[] columns )
+	{
+		StringBuffer buffer = new StringBuffer( );
+		if ( function.getArgs( ) != null )
+		{
+			int argLength = function.getArgs( ).size( );
+			for ( int i = 0; i < argLength; i++ )
 			{
-				int argLength = function.getArgs( ).size( );
-				for ( int i = 0; i < argLength; i++ )
+				TExpression arg = function.getArgs( ).getExpression( i );
+				buffer.append( getFunctionArgExpressionJavaCode( arg,
+						i,
+						argLength,
+						stmt,
+						columns ) );
+			}
+		}
+		else
+		{
+			if ( function.getExpr3( ) != null )
+			{
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+						0,
+						3,
+						stmt,
+						columns ) );
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
+						1,
+						3,
+						stmt,
+						columns ) );
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr3( ),
+						0,
+						3,
+						stmt,
+						columns ) );
+			}
+			else if ( function.getExpr2( ) != null )
+			{
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+						0,
+						2,
+						stmt,
+						columns ) );
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
+						1,
+						2,
+						stmt,
+						columns ) );
+			}
+			else if ( function.getExpr1( ) != null )
+			{
+				buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
+						0,
+						1,
+						stmt,
+						columns ) );
+			}
+			else if ( function.getExprList( ) != null )
+			{
+				int argLength = function.getExprList( ).size( );
+				for ( int i = 0; i < function.getExprList( ).size( ); i++ )
 				{
-					TExpression arg = function.getArgs( ).getExpression( i );
+					TExpression arg = function.getExprList( ).getExpression( i );
 					buffer.append( getFunctionArgExpressionJavaCode( arg,
 							i,
 							argLength,
@@ -2196,75 +2336,64 @@ public class jooqConverter
 							columns ) );
 				}
 			}
-			else
+			else if ( function.getTrimArgument( ) != null )
 			{
-				if ( function.getExpr3( ) != null )
-				{
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
-							0,
-							3,
-							stmt,
-							columns ) );
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
-							1,
-							3,
-							stmt,
-							columns ) );
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr3( ),
-							0,
-							3,
-							stmt,
-							columns ) );
-				}
-				else if ( function.getExpr2( ) != null )
-				{
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
-							0,
-							2,
-							stmt,
-							columns ) );
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr2( ),
-							1,
-							2,
-							stmt,
-							columns ) );
-				}
-				else if ( function.getExpr1( ) != null )
-				{
-					buffer.append( getFunctionArgExpressionJavaCode( function.getExpr1( ),
-							0,
-							1,
-							stmt,
-							columns ) );
-				}
-				else if ( function.getExprList( ) != null )
-				{
-					int argLength = function.getExprList( ).size( );
-					for ( int i = 0; i < function.getExprList( ).size( ); i++ )
-					{
-						TExpression arg = function.getExprList( )
-								.getExpression( i );
-						buffer.append( getFunctionArgExpressionJavaCode( arg,
-								i,
-								argLength,
-								stmt,
-								columns ) );
-					}
-				}
-				else if ( function.getTrimArgument( ) != null )
-				{
-					TExpression expr = function.getTrimArgument( )
-							.getStringExpression( );
-					buffer.append( getFunctionArgExpressionJavaCode( expr,
-							0,
-							1,
-							stmt,
-							columns ) );
-				}
+				TExpression expr = function.getTrimArgument( )
+						.getStringExpression( );
+				buffer.append( getFunctionArgExpressionJavaCode( expr,
+						0,
+						1,
+						stmt,
+						columns ) );
 			}
-			buffer.append( " )" );
 		}
 		return buffer.toString( );
+	}
+
+	private boolean needCompileFunction( TFunctionCall function )
+	{
+		String content = function.toString( ).toLowerCase( );
+		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 1 )
+		{
+			if ( content.equalsIgnoreCase( "log" )
+					|| content.equalsIgnoreCase( "log2" )
+					|| content.equalsIgnoreCase( "log10" ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private String compileFunction( TFunctionCall function,
+			TCustomSqlStatement stmt, ColumnMetaData[] columns )
+	{
+		String content = function.toString( ).toLowerCase( );
+		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 1 )
+		{
+			if ( content.equalsIgnoreCase( "log" ) )
+			{
+				return "ln( "
+						+ getFunctionArgsJavaCode( function, stmt, columns )
+						+ " )";
+			}
+			else if ( content.equalsIgnoreCase( "log2" ) )
+			{
+				return "log( "
+						+ getFunctionArgsJavaCode( function, stmt, columns )
+						+ ", 2 )";
+			}
+			else if ( content.equalsIgnoreCase( "log10" ) )
+			{
+				return "log( "
+						+ getFunctionArgsJavaCode( function, stmt, columns )
+						+ ", 10 )";
+			}
+		}
+		throw new UnsupportedOperationException( "\nDoesn't support to compile the function: "
+				+ content.toUpperCase( ) );
 	}
 
 	private String getFunctionArgExpressionJavaCode( TExpression argExpression,
@@ -2407,7 +2536,16 @@ public class jooqConverter
 			return "sha1";
 		if ( function.equalsIgnoreCase( "BIT_COUNT" ) )
 			return "bitCount";
-
+		if ( function.equalsIgnoreCase( "TRUNCATE" ) )
+			return "trunc";
+		if ( function.equalsIgnoreCase( "DEGREES" ) )
+			return "deg";
+		if ( function.equalsIgnoreCase( "RADIANS" ) )
+			return "rad";
+		if ( function.equalsIgnoreCase( "POW" ) )
+			return "power";
+		if ( function.equalsIgnoreCase( "CEILING" ) )
+			return "ceil";
 		return function;
 	}
 
