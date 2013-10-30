@@ -91,7 +91,7 @@ public class jooqConverter
 		unsupportFunctions.add( "GTID_SUBTRACT" );
 		unsupportFunctions.add( "SQL_THREAD_WAIT_AFTER_GTIDS" );
 		unsupportFunctions.add( "WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS" );
-		
+
 		unsupportFunctions.add( "BENCHMARK" );
 		unsupportFunctions.add( "CHARSET" );
 		unsupportFunctions.add( "COERCIBILITY" );
@@ -106,6 +106,10 @@ public class jooqConverter
 		unsupportFunctions.add( "SYSTEM_USER" );
 		unsupportFunctions.add( "USER" );
 		unsupportFunctions.add( "VERSION" );
+
+		unsupportFunctions.add( "ENCRYPT" );
+		unsupportFunctions.add( "OLD_PASSWORD" );
+		unsupportFunctions.add( "VALIDATE_PASSWORD_STRENGTH" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -118,6 +122,7 @@ public class jooqConverter
 		intTypefunctions.add( "DSL.count(" );
 		intTypefunctions.add( "DSL.ascii(" );
 		intTypefunctions.add( "DSL.bitLength(" );
+		intTypefunctions.add( "DSL.bitCount(" );
 		intTypefunctions.add( "DSL.charLength(" );
 		intTypefunctions.add( "DSL.position(" );
 		intTypefunctions.add( "DSL.length(" );
@@ -148,6 +153,7 @@ public class jooqConverter
 		stringTypefunctions.add( "DSL.trim(" );
 		stringTypefunctions.add( "DSL.upper(" );
 		stringTypefunctions.add( "DSL.currentUser(" );
+		stringTypefunctions.add( "DSL.md5(" );
 		stringTypefunctions.add( "MySQLDSL.aesDecrypt(" );
 		stringTypefunctions.add( "MySQLDSL.aesEncrypt(" );
 		stringTypefunctions.add( "MySQLDSL.compress(" );
@@ -1021,6 +1027,11 @@ public class jooqConverter
 							stmt,
 							column ) );
 					break;
+				case unary_bitwise_not_t :
+					buffer.append( getUnaryBitwiseNotExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
 				case bitwise_and_t :
 					buffer.append( getBitwiseAndExpressionJavaCode( expression,
 							stmt,
@@ -1028,6 +1039,11 @@ public class jooqConverter
 					break;
 				case bitwise_or_t :
 					buffer.append( getBitwiseOrExpressionJavaCode( expression,
+							stmt,
+							column ) );
+					break;
+				case bitwise_xor_t :
+					buffer.append( getBitwiseXorExpressionJavaCode( expression,
 							stmt,
 							column ) );
 					break;
@@ -1468,7 +1484,7 @@ public class jooqConverter
 			ColumnMetaData column )
 	{
 		StringBuffer buffer = new StringBuffer( );
-		buffer.append( "." ).append( operation ).append( "( " );
+		buffer.append( "DSL." ).append( operation ).append( "( " );
 		buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
 				stmt,
 				column ) );
@@ -1655,6 +1671,15 @@ public class jooqConverter
 				column );
 	}
 
+	private String getBitwiseXorExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData column )
+	{
+		return getTwoArgmentsOperationJavaCode( "bitXor",
+				expression,
+				stmt,
+				column );
+	}
+
 	private String getBitwiseLeftShiftExpressionJavaCode(
 			TExpression expression, TCustomSqlStatement stmt,
 			ColumnMetaData column )
@@ -1679,6 +1704,18 @@ public class jooqConverter
 			TCustomSqlStatement stmt, ColumnMetaData column )
 	{
 		return getLeftOperateRightJavaCode( "or", expression, stmt, column );
+	}
+
+	private String getUnaryBitwiseNotExpressionJavaCode(
+			TExpression expression, TCustomSqlStatement stmt,
+			ColumnMetaData column )
+	{
+		return "DSL"
+				+ getOneArgmentsOperationJavaCode( "bitNot",
+						expression.getRightOperand( ),
+						stmt,
+						column,
+						true );
 	}
 
 	private String getLogicNotExpressionJavaCode( TExpression expression,
@@ -2320,6 +2357,8 @@ public class jooqConverter
 			return true;
 		if ( function.equalsIgnoreCase( "UNCOMPRESS" ) )
 			return true;
+		if ( function.equalsIgnoreCase( "SHA" ) )
+			return true;
 		if ( function.equalsIgnoreCase( "SHA1" ) )
 			return true;
 		if ( function.equalsIgnoreCase( "SHA2" ) )
@@ -2361,6 +2400,11 @@ public class jooqConverter
 			return "uncompressedLength";
 		if ( function.equalsIgnoreCase( "CURRENT_USER" ) )
 			return "currentUser";
+		if ( function.equalsIgnoreCase( "SHA" ) )
+			return "sha1";
+		if ( function.equalsIgnoreCase( "BIT_COUNT" ) )
+			return "bitCount";
+
 		return function;
 	}
 
