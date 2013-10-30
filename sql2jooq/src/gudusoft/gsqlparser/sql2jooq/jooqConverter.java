@@ -59,43 +59,80 @@ public class jooqConverter
 	private boolean ignoreGeneric = false;
 	private TGSqlParser sqlparser;
 
-	private List<String> functions = new ArrayList<String>( );
+	private List<String> unsupportFunctions = new ArrayList<String>( );
 	{
-		functions.add( "DSL.count(" );
-		functions.add( "DSL.ascii(" );
-		functions.add( "DSL.bitLength(" );
-		functions.add( "DSL.charLength(" );
-		functions.add( "DSL.position(" );
-		functions.add( "DSL.length(" );
-		functions.add( "DSL.octetLength(" );
-		functions.add( "DSL.left(" );
-		functions.add( "DSL.concat(" );
-		functions.add( "DSL.left(" );
-		functions.add( "DSL.lower(" );
-		functions.add( "DSL.lpad(" );
-		functions.add( "DSL.ltrim(" );
-		functions.add( "DSL.mid(" );
-		functions.add( "DSL.repeat(" );
-		functions.add( "DSL.replace(" );
-		functions.add( "DSL.reverse(" );
-		functions.add( "DSL.right(" );
-		functions.add( "DSL.rpad(" );
-		functions.add( "DSL.rtrim(" );
-		functions.add( "DSL.substring(" );
-		functions.add( "DSL.trim(" );
-		functions.add( "DSL.upper(" );
-		functions.add( "MySQLDSL.aesDecrypt(" );
-		functions.add( "MySQLDSL.aesEncrypt(" );
-		functions.add( "MySQLDSL.compress(" );
-		functions.add( "MySQLDSL.decode(" );
-		functions.add( "MySQLDSL.desDecrypt(" );
-		functions.add( "MySQLDSL.desEncrypt(" );
-		functions.add( "MySQLDSL.encode(" );
-		functions.add( "MySQLDSL.uncompress(" );
-		functions.add( "MySQLDSL.uncompressedLength(" );
-		functions.add( "MySQLDSL.sha1(" );
-		functions.add( "MySQLDSL.sha2(" );
-		functions.add( "MySQLDSL.password(" );
+		unsupportFunctions.add( "IF" );
+		unsupportFunctions.add( "TO_BASE64" );
+		unsupportFunctions.add( "CONVERT" );
+		unsupportFunctions.add( "DEFAULT" );
+		unsupportFunctions.add( "GET_LOCK" );
+		unsupportFunctions.add( "INET_ATON" );
+		unsupportFunctions.add( "INET_NTOA" );
+		unsupportFunctions.add( "INET6_ATON" );
+		unsupportFunctions.add( "INET6_NTOA" );
+		unsupportFunctions.add( "IS_FREE_LOCK" );
+		unsupportFunctions.add( "IS_IPV4_COMPAT" );
+		unsupportFunctions.add( "IS_IPV4_MAPPED" );
+		unsupportFunctions.add( "IS_IPV4" );
+		unsupportFunctions.add( "IS_IPV6" );
+		unsupportFunctions.add( "IS_USED_LOCK" );
+		unsupportFunctions.add( "MASTER_POS_WAIT" );
+		unsupportFunctions.add( "NAME_CONST" );
+		unsupportFunctions.add( "RELEASE_LOCK" );
+		unsupportFunctions.add( "SLEEP" );
+		unsupportFunctions.add( "UUID_SHORT" );
+		unsupportFunctions.add( "UUID" );
+		unsupportFunctions.add( "VALUES" );
+		unsupportFunctions.add( "RAND" );
+	}
+
+	private List<String> intTypefunctions = new ArrayList<String>( );
+	{
+		intTypefunctions.add( "DSL.count(" );
+		intTypefunctions.add( "DSL.ascii(" );
+		intTypefunctions.add( "DSL.bitLength(" );
+		intTypefunctions.add( "DSL.charLength(" );
+		intTypefunctions.add( "DSL.position(" );
+		intTypefunctions.add( "DSL.length(" );
+		intTypefunctions.add( "DSL.octetLength(" );
+		intTypefunctions.add( "MySQLDSL.uncompressedLength(" );
+	}
+
+	private List<String> stringTypefunctions = new ArrayList<String>( );
+	{
+		stringTypefunctions.add( "DSL.left(" );
+		stringTypefunctions.add( "DSL.concat(" );
+		stringTypefunctions.add( "DSL.left(" );
+		stringTypefunctions.add( "DSL.lower(" );
+		stringTypefunctions.add( "DSL.lpad(" );
+		stringTypefunctions.add( "DSL.ltrim(" );
+		stringTypefunctions.add( "DSL.mid(" );
+		stringTypefunctions.add( "DSL.repeat(" );
+		stringTypefunctions.add( "DSL.replace(" );
+		stringTypefunctions.add( "DSL.reverse(" );
+		stringTypefunctions.add( "DSL.right(" );
+		stringTypefunctions.add( "DSL.rpad(" );
+		stringTypefunctions.add( "DSL.rtrim(" );
+		stringTypefunctions.add( "DSL.substring(" );
+		stringTypefunctions.add( "DSL.trim(" );
+		stringTypefunctions.add( "DSL.upper(" );
+		stringTypefunctions.add( "MySQLDSL.aesDecrypt(" );
+		stringTypefunctions.add( "MySQLDSL.aesEncrypt(" );
+		stringTypefunctions.add( "MySQLDSL.compress(" );
+		stringTypefunctions.add( "MySQLDSL.decode(" );
+		stringTypefunctions.add( "MySQLDSL.desDecrypt(" );
+		stringTypefunctions.add( "MySQLDSL.desEncrypt(" );
+		stringTypefunctions.add( "MySQLDSL.encode(" );
+		stringTypefunctions.add( "MySQLDSL.uncompress(" );
+		stringTypefunctions.add( "MySQLDSL.sha1(" );
+		stringTypefunctions.add( "MySQLDSL.sha2(" );
+		stringTypefunctions.add( "MySQLDSL.password(" );
+	}
+
+	private List<String> fixTypeFunctions = new ArrayList<String>( );
+	{
+		fixTypeFunctions.addAll( intTypefunctions );
+		fixTypeFunctions.addAll( stringTypefunctions );
 	}
 
 	public DatabaseMetaData getMetadata( )
@@ -776,9 +813,9 @@ public class jooqConverter
 	{
 		int index = -1;
 		String function = null;
-		for ( int i = 0; i < functions.size( ); i++ )
+		for ( int i = 0; i < fixTypeFunctions.size( ); i++ )
 		{
-			String func = functions.get( i );
+			String func = fixTypeFunctions.get( i );
 			int funcIndex = javaCode.indexOf( func );
 			if ( funcIndex != -1 && ( index == -1 || funcIndex < index ) )
 			{
@@ -803,47 +840,20 @@ public class jooqConverter
 
 		if ( function != null )
 		{
-			if ( function.indexOf( "DSL.count(" ) > -1
-					|| function.indexOf( "DSL.ascii(" ) > -1
-					|| function.indexOf( "DSL.bitLength(" ) > -1
-					|| function.indexOf( "DSL.charLength(" ) > -1
-					|| function.indexOf( "DSL.position(" ) > -1
-					|| function.indexOf( "DSL.length(" ) > -1
-					|| function.indexOf( "DSL.octetLength(" ) > -1
-					|| function.indexOf( "DSL.uncompressedLength(" ) > -1 )
+			for ( int i = 0; i < intTypefunctions.size( ); i++ )
 			{
-				return Integer.class.getName( );
+				if ( function.indexOf( intTypefunctions.get( i ) ) > -1 )
+				{
+					return Integer.class.getName( );
+				}
 			}
 
-			if ( function.indexOf( "DSL.left(" ) > -1
-					|| function.indexOf( "DSL.concat(" ) > -1
-					|| function.indexOf( "DSL.left(" ) > -1
-					|| function.indexOf( "DSL.lower(" ) > -1
-					|| function.indexOf( "DSL.lpad(" ) > -1
-					|| function.indexOf( "DSL.ltrim(" ) > -1
-					|| function.indexOf( "DSL.mid(" ) > -1
-					|| function.indexOf( "DSL.repeat(" ) > -1
-					|| function.indexOf( "DSL.replace(" ) > -1
-					|| function.indexOf( "DSL.reverse(" ) > -1
-					|| function.indexOf( "DSL.right(" ) > -1
-					|| function.indexOf( "DSL.rpad(" ) > -1
-					|| function.indexOf( "DSL.rtrim(" ) > -1
-					|| function.indexOf( "DSL.substr(" ) > -1
-					|| function.indexOf( "DSL.trim(" ) > -1
-					|| function.indexOf( "DSL.upper(" ) > -1
-					|| function.indexOf( "MySQLDSL.aesDecrypt(" ) > -1
-					|| function.indexOf( "MySQLDSL.aesEncrypt(" ) > -1
-					|| function.indexOf( "MySQLDSL.compress(" ) > -1
-					|| function.indexOf( "MySQLDSL.decode(" ) > -1
-					|| function.indexOf( "MySQLDSL.desDecrypt(" ) > -1
-					|| function.indexOf( "MySQLDSL.desEncrypt(" ) > -1
-					|| function.indexOf( "MySQLDSL.encode(" ) > -1
-					|| function.indexOf( "MySQLDSL.uncompress(" ) > -1
-					|| function.indexOf( "MySQLDSL.sha1(" ) > -1
-					|| function.indexOf( "MySQLDSL.sha2(" ) > -1
-					|| function.indexOf( "MySQLDSL.password(" ) > -1 )
+			for ( int i = 0; i < stringTypefunctions.size( ); i++ )
 			{
-				return String.class.getName( );
+				if ( function.indexOf( stringTypefunctions.get( i ) ) > -1 )
+				{
+					return String.class.getName( );
+				}
 			}
 		}
 
@@ -2221,17 +2231,10 @@ public class jooqConverter
 
 	private boolean supportFunction( String function )
 	{
-		if ( function.equalsIgnoreCase( "IF" ) )
+		for ( int i = 0; i < unsupportFunctions.size( ); i++ )
 		{
-			return false;
-		}
-		if ( function.equalsIgnoreCase( "TO_BASE64" ) )
-		{
-			return false;
-		}
-		if ( function.equalsIgnoreCase( "CONVERT" ) )
-		{
-			return false;
+			if ( unsupportFunctions.get( i ).equalsIgnoreCase( function ) )
+				return false;
 		}
 		return true;
 	}
