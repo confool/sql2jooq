@@ -65,7 +65,7 @@ public class jooqConverter
 		unsupportFunctions.add( "IF" );
 		unsupportFunctions.add( "TO_BASE64" );
 		unsupportFunctions.add( "CONVERT" );
-		
+
 		unsupportFunctions.add( "DEFAULT" );
 		unsupportFunctions.add( "GET_LOCK" );
 		unsupportFunctions.add( "INET_ATON" );
@@ -86,11 +86,26 @@ public class jooqConverter
 		unsupportFunctions.add( "UUID" );
 		unsupportFunctions.add( "VALUES" );
 		unsupportFunctions.add( "RAND" );
-		
+
 		unsupportFunctions.add( "GTID_SUBSET" );
 		unsupportFunctions.add( "GTID_SUBTRACT" );
 		unsupportFunctions.add( "SQL_THREAD_WAIT_AFTER_GTIDS" );
 		unsupportFunctions.add( "WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS" );
+		
+		unsupportFunctions.add( "BENCHMARK" );
+		unsupportFunctions.add( "CHARSET" );
+		unsupportFunctions.add( "COERCIBILITY" );
+		unsupportFunctions.add( "COLLATION" );
+		unsupportFunctions.add( "CONNECTION_ID" );
+		unsupportFunctions.add( "DATABASE" );
+		unsupportFunctions.add( "FOUND_ROWS" );
+		unsupportFunctions.add( "LAST_INSERT_ID" );
+		unsupportFunctions.add( "ROW_COUNT" );
+		unsupportFunctions.add( "SCHEMA" );
+		unsupportFunctions.add( "SESSION_USER" );
+		unsupportFunctions.add( "SYSTEM_USER" );
+		unsupportFunctions.add( "USER" );
+		unsupportFunctions.add( "VERSION" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -117,7 +132,6 @@ public class jooqConverter
 
 	private List<String> stringTypefunctions = new ArrayList<String>( );
 	{
-		stringTypefunctions.add( "DSL.left(" );
 		stringTypefunctions.add( "DSL.concat(" );
 		stringTypefunctions.add( "DSL.left(" );
 		stringTypefunctions.add( "DSL.lower(" );
@@ -133,6 +147,7 @@ public class jooqConverter
 		stringTypefunctions.add( "DSL.substring(" );
 		stringTypefunctions.add( "DSL.trim(" );
 		stringTypefunctions.add( "DSL.upper(" );
+		stringTypefunctions.add( "DSL.currentUser(" );
 		stringTypefunctions.add( "MySQLDSL.aesDecrypt(" );
 		stringTypefunctions.add( "MySQLDSL.aesEncrypt(" );
 		stringTypefunctions.add( "MySQLDSL.compress(" );
@@ -2323,16 +2338,13 @@ public class jooqConverter
 		if ( function.equalsIgnoreCase( "CHAR_LENGTH" )
 				|| function.equalsIgnoreCase( "CHARACTER_LENGTH" ) )
 			return "charLength";
-		if ( function.equalsIgnoreCase( "INSTR" ) )
-			return "position";
-		if ( function.equalsIgnoreCase( "LOCATE" ) )
+		if ( function.equalsIgnoreCase( "INSTR" )
+				|| function.equalsIgnoreCase( "LOCATE" ) )
 			return "position";
 		if ( function.equalsIgnoreCase( "OCTET_LENGTH" ) )
 			return "octetLength";
 		if ( function.equalsIgnoreCase( "SUBSTR" ) )
 			return "substring";
-		if ( function.equalsIgnoreCase( "UCASE" ) )
-			return "upper";
 		if ( function.equalsIgnoreCase( "UCASE" ) )
 			return "upper";
 		if ( function.equalsIgnoreCase( "LCASE" ) )
@@ -2347,7 +2359,8 @@ public class jooqConverter
 			return "desEncrypt";
 		if ( function.equalsIgnoreCase( "UNCOMPRESSED_LENGTH" ) )
 			return "uncompressedLength";
-
+		if ( function.equalsIgnoreCase( "CURRENT_USER" ) )
+			return "currentUser";
 		return function;
 	}
 
