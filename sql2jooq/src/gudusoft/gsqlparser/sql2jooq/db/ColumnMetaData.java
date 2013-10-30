@@ -5,8 +5,18 @@ public class ColumnMetaData
 {
 
 	private String columnName;
-	private int sqlType;
 	private String javaTypeClass;
+	private String typeName;
+
+	public String getTypeName( )
+	{
+		return typeName;
+	}
+
+	public void setTypeName( String typeName )
+	{
+		this.typeName = typeName;
+	}
 
 	public String getColumnName( )
 	{
@@ -16,16 +26,6 @@ public class ColumnMetaData
 	public void setColumnName( String columnName )
 	{
 		this.columnName = columnName;
-	}
-
-	public int getSqlType( )
-	{
-		return sqlType;
-	}
-
-	public void setSqlType( int sqlType )
-	{
-		this.sqlType = sqlType;
 	}
 
 	public String getJavaTypeClass( )

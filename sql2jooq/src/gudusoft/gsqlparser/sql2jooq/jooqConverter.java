@@ -1071,6 +1071,8 @@ public class jooqConverter
 				case subquery_t :
 					buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
 					break;
+				case unary_binary_operator_t :
+					throw new PlainSQLException( expression, stmt );
 				default :
 					throw new UnsupportedOperationException( "\nExpression: "
 							+ expression.toString( )
@@ -2224,6 +2226,10 @@ public class jooqConverter
 			return false;
 		}
 		if ( function.equalsIgnoreCase( "TO_BASE64" ) )
+		{
+			return false;
+		}
+		if ( function.equalsIgnoreCase( "CONVERT" ) )
 		{
 			return false;
 		}
