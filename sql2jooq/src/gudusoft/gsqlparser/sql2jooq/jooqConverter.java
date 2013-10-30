@@ -110,6 +110,9 @@ public class jooqConverter
 		unsupportFunctions.add( "ENCRYPT" );
 		unsupportFunctions.add( "OLD_PASSWORD" );
 		unsupportFunctions.add( "VALIDATE_PASSWORD_STRENGTH" );
+		
+		unsupportFunctions.add( "ExtractValue" );
+		unsupportFunctions.add( "UpdateXML" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
