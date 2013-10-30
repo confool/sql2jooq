@@ -65,6 +65,7 @@ public class jooqConverter
 		unsupportFunctions.add( "IF" );
 		unsupportFunctions.add( "TO_BASE64" );
 		unsupportFunctions.add( "CONVERT" );
+		
 		unsupportFunctions.add( "DEFAULT" );
 		unsupportFunctions.add( "GET_LOCK" );
 		unsupportFunctions.add( "INET_ATON" );
@@ -85,6 +86,11 @@ public class jooqConverter
 		unsupportFunctions.add( "UUID" );
 		unsupportFunctions.add( "VALUES" );
 		unsupportFunctions.add( "RAND" );
+		
+		unsupportFunctions.add( "GTID_SUBSET" );
+		unsupportFunctions.add( "GTID_SUBTRACT" );
+		unsupportFunctions.add( "SQL_THREAD_WAIT_AFTER_GTIDS" );
+		unsupportFunctions.add( "WAIT_UNTIL_SQL_THREAD_AFTER_GTIDS" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -103,7 +109,7 @@ public class jooqConverter
 		intTypefunctions.add( "DSL.octetLength(" );
 		intTypefunctions.add( "MySQLDSL.uncompressedLength(" );
 	}
-	
+
 	private List<String> bigDecimalTypefunctions = new ArrayList<String>( );
 	{
 		bigDecimalTypefunctions.add( "DSL.rand(" );
@@ -426,23 +432,23 @@ public class jooqConverter
 
 	private String getQueryJavaCode( TSelectSqlStatement stmt )
 	{
-		StringBuffer convertResult = new StringBuffer( );
+		StringBuffer buffer = new StringBuffer( );
 
 		if ( stmt.isCombinedQuery( ) )
 		{
 			TSelectSqlStatement leftStmt = stmt.getLeftStmt( );
 			TSelectSqlStatement rightStmt = stmt.getRightStmt( );
-			convertResult.append( getQueryJavaCode( leftStmt ) );
+			buffer.append( getQueryJavaCode( leftStmt ) );
 			switch ( stmt.getSetOperator( ) )
 			{
 				case TSelectSqlStatement.setOperator_union :
-					convertResult.append( ".union" );
+					buffer.append( ".union" );
 					break;
 				case TSelectSqlStatement.setOperator_unionall :
-					convertResult.append( ".unionAll" );
+					buffer.append( ".unionAll" );
 					break;
 				case TSelectSqlStatement.setOperator_intersect :
-					convertResult.append( ".intersect" );
+					buffer.append( ".intersect" );
 					break;
 				case TSelectSqlStatement.setOperator_intersectall :
 					throw new UnsupportedOperationException( "\nDoesn't support the operation: INTERSECT ALL" );
@@ -457,31 +463,31 @@ public class jooqConverter
 					// convertResult.append( ".minusAll" );
 					// break;
 				case TSelectSqlStatement.setOperator_except :
-					convertResult.append( ".except" );
+					buffer.append( ".except" );
 					break;
 				case TSelectSqlStatement.setOperator_exceptall :
 					throw new UnsupportedOperationException( "\nDoesn't support the operation: EXCEPT ALL" );
 					// convertResult.append( ".exceptAll" );
 					// break;
 			}
-			convertResult.append( "( " )
+			buffer.append( "( " )
 					.append( getCombineQueryJavaCode( stmt, rightStmt ) )
 					.append( " )" );
 		}
 		else
 		{
-			convertResult.append( getResultsetColumnsJavaCode( stmt ) );
-			convertResult.append( getTableJoinsJavaCode( stmt ) );
-			convertResult.append( getWhereClauseJavaCode( stmt ) );
-			convertResult.append( getGroupByClauseJavaCode( stmt ) );
-			convertResult.append( getOrderbyClauseJavaCode( stmt ) );
-			convertResult.append( getLimitClauseJavaCode( stmt ) );
-			convertResult.append( getForUpdateClauseJavaCode( stmt ) );
+			buffer.append( getResultsetColumnsJavaCode( stmt ) );
+			buffer.append( getTableJoinsJavaCode( stmt ) );
+			buffer.append( getWhereClauseJavaCode( stmt ) );
+			buffer.append( getGroupByClauseJavaCode( stmt ) );
+			buffer.append( getOrderbyClauseJavaCode( stmt ) );
+			buffer.append( getLimitClauseJavaCode( stmt ) );
+			buffer.append( getForUpdateClauseJavaCode( stmt ) );
 		}
 
-		trimResult( convertResult );
+		trimResult( buffer );
 
-		return convertResult.toString( );
+		return buffer.toString( );
 	}
 
 	private Object getCombineQueryJavaCode( TSelectSqlStatement root,
@@ -867,7 +873,7 @@ public class jooqConverter
 					return String.class.getName( );
 				}
 			}
-			
+
 			for ( int i = 0; i < bigDecimalTypefunctions.size( ); i++ )
 			{
 				if ( function.indexOf( bigDecimalTypefunctions.get( i ) ) > -1 )
