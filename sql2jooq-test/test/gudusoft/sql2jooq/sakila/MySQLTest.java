@@ -98,12 +98,10 @@ public class MySQLTest
 					Number n1 = widen((Number) value1);
 					Number n2 = widen((Number) value2);
 					
-					if (n1.getClass() == n2.getClass()) {
-						assertEquals(n1, n2);
-					}
-					else {
-						assertEquals(new BigDecimal(n1.toString()), new BigDecimal(n2.toString()));
-					}
+					// Don't make a difference between 1.0 and 1
+					String s1 = n1.toString().replaceAll("\\.0$", "");
+					String s2 = n2.toString().replaceAll("\\.0$", "");
+					assertEquals(new BigDecimal(s1), new BigDecimal(s2));
 				}
 				else {
 					assertEquals(value1, value2);
