@@ -118,6 +118,12 @@ public class jooqConverter
 
 		unsupportFunctions.add( "CONV" );
 		unsupportFunctions.add( "CRC32" );
+
+		unsupportFunctions.add( "LEFT" );
+		unsupportFunctions.add( "RIGHT" );
+		unsupportFunctions.add( "STRCMP" );
+		unsupportFunctions.add( "SPACE" );
+		unsupportFunctions.add( "REVERSE" );
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -1268,6 +1274,12 @@ public class jooqConverter
 			if ( !e.isFromField( ) )
 			{
 				buffer.append( "DSL.condition( \""
+						+ expression.toString( )
+						+ "\" )" );
+			}
+			else if ( e.needConvertToField( ) )
+			{
+				buffer.append( "DSL.field( \""
 						+ expression.toString( )
 						+ "\" )" );
 			}
@@ -2438,6 +2450,13 @@ public class jooqConverter
 				return true;
 			}
 		}
+		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 2 )
+		{
+			if ( content.equalsIgnoreCase( "log" ) )
+			{
+				return true;
+			}
+		}
 		if ( content.equalsIgnoreCase( "cast" ) )
 		{
 			return true;
@@ -2469,6 +2488,18 @@ public class jooqConverter
 				return "log( "
 						+ getFunctionArgsJavaCode( function, stmt, columns )
 						+ ", 10 )";
+			}
+		}
+		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 2 )
+		{
+			if ( content.equalsIgnoreCase( "log" ) )
+			{
+				return "log( "
+						+ getFunctionArgExpressionJavaCode( function.getArgs( )
+								.getExpression( 0 ), 0, 2, stmt, columns )
+						+ getFunctionArgExpressionJavaCode( function.getArgs( )
+								.getExpression( 1 ), 1, 2, stmt, columns )
+						+ ".getValue( ) )";
 			}
 		}
 		if ( content.equalsIgnoreCase( "cast" )
