@@ -17,13 +17,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
  * @author Lukas Eder
  */
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
-public class SakilaTest0084 extends MySQLTest
+public class SakilaTest0085 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select upper('AbC')";
+		String sql = "select 1 from dual order by rand()";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -39,7 +39,9 @@ public class SakilaTest0084 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.upper( DSL.inline( "AbC" ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.orderBy( DSL.rand(  ) ).fetch( );
 
 		return result;
 	}

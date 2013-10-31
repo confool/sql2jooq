@@ -124,3 +124,6 @@ select substr('foobarbar', 4);
 select substr('foobarbar', 4, 2);
 select trim('  barbar  ');
 select upper('AbC');
+
+select 1 from dual order by rand();
+select 1 from dual order by rand(3);
