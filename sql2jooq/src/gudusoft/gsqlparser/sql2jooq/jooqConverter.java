@@ -2496,9 +2496,9 @@ public class jooqConverter
 			{
 				return "log( "
 						+ getFunctionArgExpressionJavaCode( function.getArgs( )
-								.getExpression( 0 ), 0, 2, stmt, columns )
-						+ getFunctionArgExpressionJavaCode( function.getArgs( )
 								.getExpression( 1 ), 1, 2, stmt, columns )
+						+ getFunctionArgExpressionJavaCode( function.getArgs( )
+								.getExpression( 0 ), 0, 2, stmt, columns )
 						+ ".getValue( ) )";
 			}
 		}
