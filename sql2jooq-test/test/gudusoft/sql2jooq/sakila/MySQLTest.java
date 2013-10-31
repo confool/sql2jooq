@@ -103,6 +103,16 @@ public class MySQLTest
 					String s2 = n2.toString().replaceAll("\\.0$", "");
 					assertEquals(new BigDecimal(s1), new BigDecimal(s2));
 				}
+				
+				// Plain SQL may return byte arrays when it should return a String
+				else if (value1 instanceof String || value2 instanceof String) {
+					String s1 = value1 instanceof byte[] ? new String((byte[]) value1) : value1.toString();
+					String s2 = value2 instanceof byte[] ? new String((byte[]) value2) : value2.toString();
+					
+					assertEquals(s1, s2);
+				}
+				
+				// Default cause
 				else {
 					assertEquals(value1, value2);
 				}
