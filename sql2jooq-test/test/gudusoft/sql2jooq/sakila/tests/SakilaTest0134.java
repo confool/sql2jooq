@@ -24,7 +24,7 @@ public class SakilaTest0134 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select truncate(1.1)";
+		String sql = "select truncate(1.1, 0)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0134 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Double>> result = create.select( DSL.trunc( DSL.inline( 1.1 ) ) ).fetch( );
+Result<Record1<Double>> result = create.select( DSL.trunc( DSL.inline( 1.1 ), DSL.inline( 0 ) ) ).fetch( );
 
 		return result;
 	}

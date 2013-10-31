@@ -140,7 +140,7 @@ select aes_encrypt('abc', 'x');
 select aes_decrypt(aes_encrypt('abc', 'x'), 'x');
 select uncompress(compress('xxx'));
 
-select bitCount(1234);
+select bit_count(1234);
 select 12 & 45;
 select ~33;
 select 12 | 45;
@@ -177,5 +177,5 @@ select 5 mod 3;
 select 5 % 3;
 select 2 + 1;
 select 2 * 4;
-select truncate(1.1);
+select truncate(1.1, 0);
 select -3;
