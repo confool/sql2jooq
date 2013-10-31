@@ -24,7 +24,7 @@ public class SakilaTest0086 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from dual order by rand(3)";
+		String sql = "select 1 from actor where actor_id = 1 order by rand(3)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -41,7 +41,8 @@ public class SakilaTest0086 extends MySQLTest
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
 Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
-	.from( DSL.dual() )
+	.from( Actor.ACTOR )
+	.where( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ) )
 	.orderBy( DSL.condition( "rand(3)" ) ).fetch( );
 
 		return result;
