@@ -8,5 +8,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="../lib/gsp.jar"/>
 	<classpathentry kind="lib" path="../lib/jooq-3.1.0.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/lib"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
