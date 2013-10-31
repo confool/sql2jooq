@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -9,6 +8,7 @@ import java.sql.*;
 import org.jooq.*;
 import org.jooq.impl.*;
 import org.junit.*;
+import org.jooq.types.*;
 
 import gudusoft.sakila.tables.*;
 import gudusoft.sql2jooq.sakila.MySQLTest;
@@ -38,14 +38,14 @@ public class SakilaTest0038 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field x = DSL.inline( 1 ).as("x");
-Table a = create.select( x ).asTable("a");
-Field y = DSL.inline( 1 ).as("y");
-Table b = create.select( y ).asTable("b");
+Field<Integer> x = DSL.inline( 1 ).as("x");
+Table<Record1<Integer>> a = create.select( x ).asTable("a");
+Field<Integer> y = DSL.inline( 1 ).as("y");
+Table<Record1<Integer>> b = create.select( y ).asTable("b");
 
-Result result = create.select(  )
+Result<Record> result = create.select(  )
 	.from( a )
-	.join( b ).on( ((Field)a.field( "x" )).equal( ((Field)b.field( "y" )) ) ).fetch( );
+	.join( b ).on( ((Field<Integer>)a.field( "x" )).equal( ((Field<Integer>)b.field( "y" )) ) ).fetch( );
 
 		return result;
 	}
