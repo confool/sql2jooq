@@ -2494,11 +2494,18 @@ public class jooqConverter
 		{
 			if ( content.equalsIgnoreCase( "log" ) )
 			{
+				String firstArg = getFunctionArgExpressionJavaCode( function.getArgs( )
+						.getExpression( 0 ),
+						0,
+						2,
+						stmt,
+						columns ).trim( );
+				firstArg = firstArg.substring( 0, firstArg.lastIndexOf( ',' ) );
 				return "log( "
 						+ getFunctionArgExpressionJavaCode( function.getArgs( )
 								.getExpression( 1 ), 1, 2, stmt, columns )
-						+ getFunctionArgExpressionJavaCode( function.getArgs( )
-								.getExpression( 0 ), 0, 2, stmt, columns )
+						+ ", "
+						+ firstArg
 						+ ".getValue( ) )";
 			}
 		}
