@@ -139,3 +139,11 @@ select decode(encode('abc', 'x'), 'x');
 select aes_encrypt('abc', 'x');
 select aes_decrypt(aes_encrypt('abc', 'x'), 'x');
 select uncompress(compress('xxx'));
+
+select bitCount(1234);
+select 12 & 45;
+select ~33;
+select 12 | 45;
+select 12 ^ 45;
+select 12 << 3;
+select 12 >> 3;
