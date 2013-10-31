@@ -43,7 +43,7 @@ public class SakilaTest0088 extends MySQLTest
 Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
 	.from( Actor.ACTOR )
 	.where( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ) )
-	.orderBy( DSL.condition( "rand(3)" ).desc( ) ).fetch( );
+	.orderBy( DSL.field( "rand(3)" ).desc( ) ).fetch( );
 
 		return result;
 	}

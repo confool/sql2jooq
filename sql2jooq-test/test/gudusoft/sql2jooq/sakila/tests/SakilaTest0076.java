@@ -40,7 +40,7 @@ public class SakilaTest0076 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.reverse( DSL.inline( "abc" ) ) ).fetch( );
+Result<Record1<Object>> result = create.select( DSL.field( "reverse('abc')" ) ).fetch( );
 
 		return result;
 	}

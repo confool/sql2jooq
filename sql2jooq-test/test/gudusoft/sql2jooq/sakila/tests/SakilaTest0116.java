@@ -40,7 +40,7 @@ public class SakilaTest0116 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<java.math.BigDecimal>> result = create.select( DSL.log( DSL.inline( 3 ), DSL.inline( 4 ) ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.log( DSL.inline( 3 ), DSL.inline( 4 ).getValue( ) ) ).fetch( );
 
 		return result;
 	}
