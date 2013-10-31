@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -40,9 +39,9 @@ public class SakilaTest0056 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.field( "if (actor_id = 1, 1, null)" ) )
+Result<Record1<Object>> result = create.select( DSL.field( "if (actor_id = 1, 1, null)" ) )
 	.from( Actor.ACTOR )
-	.where( ((Field)Actor.ACTOR.ACTOR_ID).lessThan( DSL.inline( 10 ) ) ).fetch( );
+	.where( Actor.ACTOR.ACTOR_ID.lessThan( DSL.inline( UShort.valueOf( 10 ) ) ) ).fetch( );
 
 		return result;
 	}

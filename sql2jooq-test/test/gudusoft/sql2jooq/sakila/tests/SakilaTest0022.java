@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -40,7 +39,7 @@ public class SakilaTest0022 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( DSL.inline( 1 ) )
+Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
 	.from( DSL.dual() )
 	.where( DSL.inline( 3 ).between( DSL.inline( 2 ) ).and( DSL.inline( 4 ) ) ).fetch( );
 

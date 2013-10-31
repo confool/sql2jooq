@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -40,10 +39,10 @@ public class SakilaTest0019 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( ((Field)Country.COUNTRY.COUNTRY_), ((Field)City.CITY.CITY_), ((Field)Address.ADDRESS.ADDRESS_) )
+Result<Record3<String, String, String>> result = create.select( Country.COUNTRY.COUNTRY_, City.CITY.CITY_, Address.ADDRESS.ADDRESS_ )
 	.from( Address.ADDRESS )
-	.rightOuterJoin( City.CITY ).using( ((Field)City.CITY.CITY_ID) )
-	.rightOuterJoin( Country.COUNTRY ).using( ((Field)City.CITY.COUNTRY_ID) ).fetch( );
+	.rightOuterJoin( City.CITY ).using( City.CITY.CITY_ID )
+	.rightOuterJoin( Country.COUNTRY ).using( City.CITY.COUNTRY_ID ).fetch( );
 
 		return result;
 	}

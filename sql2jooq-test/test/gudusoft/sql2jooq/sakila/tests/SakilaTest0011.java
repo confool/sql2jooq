@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -45,9 +44,9 @@ public class SakilaTest0011 extends MySQLTest
 City c = City.CITY.as("c");
 Country co = Country.COUNTRY.as("co");
 
-Result result = create.select( ((Field)c.CITY_), ((Field)co.COUNTRY_) )
+Result<Record2<String, String>> result = create.select( c.CITY_, co.COUNTRY_ )
 	.from( c )
-	.join( co ).on( ((Field)c.COUNTRY_ID).equal( ((Field)co.COUNTRY_ID) ) ).fetch( );
+	.join( co ).on( c.COUNTRY_ID.equal( co.COUNTRY_ID ) ).fetch( );
 
 		return result;
 	}

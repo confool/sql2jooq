@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -39,10 +38,10 @@ public class SakilaTest0058 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field a = DSL.nvl( DSL.inline( 1 ), DSL.inline( 2 ) ).as("a");
+Field<Integer> a = DSL.nvl( DSL.inline( 1 ), DSL.inline( 2 ) ).as("a");
 Field b = DSL.nvl( DSL.inline( (Object)null ), DSL.inline( 2 ) ).as("b");
 
-Result result = create.select( a, b ).fetch( );
+Result<Record2<Integer, Object>> result = create.select( a, b ).fetch( );
 
 		return result;
 	}

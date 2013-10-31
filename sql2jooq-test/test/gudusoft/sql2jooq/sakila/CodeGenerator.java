@@ -61,7 +61,7 @@ public class CodeGenerator
             	System.out.println("Generating code for : (" + id + ") " + query.replaceAll("[\\n\\r]+", "$0                             "));
 
                 jooqConverter convert = new jooqConverter( metaData, EDbVendor.dbvmysql, query );
-                convert.convert( true );
+                convert.convert( );
                 
 				if ( convert.getErrorMessage( ) != null )
 				{

@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -45,14 +44,14 @@ public class SakilaTest0053 extends MySQLTest
 	private static Result generatedSQL( Connection conn )
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
-Field b1 = DSL.decode( ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 1 ) ), DSL.inline( 1 ) ).as("b1");
-Field b2 = DSL.decode( ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 1 ) ), DSL.inline( 1 ) ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 2 ) ), DSL.inline( 2 ) ).as("b2");
-Field b3 = DSL.decode( ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 1 ) ), DSL.inline( 1 ) ).otherwise( DSL.inline( 0 ) ).as("b3");
-Field b4 = DSL.decode( ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 1 ) ), DSL.inline( 1 ) ).when( ((Field)Actor.ACTOR.ACTOR_ID).equal( DSL.inline( 2 ) ), DSL.inline( 2 ) ).otherwise( DSL.inline( 0 ) ).as("b4");
+Field<UShort> b1 = DSL.decode( ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ), DSL.inline( UShort.valueOf( 1 ) ) ).as("b1");
+Field<UShort> b2 = DSL.decode( ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ), DSL.inline( UShort.valueOf( 1 ) ) ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 2 ) ) ), DSL.inline( UShort.valueOf( 2 ) ) ).as("b2");
+Field<UShort> b3 = DSL.decode( ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ), DSL.inline( UShort.valueOf( 1 ) ) ).otherwise( DSL.inline( UShort.valueOf( 0 ) ) ).as("b3");
+Field<UShort> b4 = DSL.decode( ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ), DSL.inline( UShort.valueOf( 1 ) ) ).when( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 2 ) ) ), DSL.inline( UShort.valueOf( 2 ) ) ).otherwise( DSL.inline( UShort.valueOf( 0 ) ) ).as("b4");
 
-Result result = create.select( b1, b2, b3, b4 )
+Result<Record4<UShort, UShort, UShort, UShort>> result = create.select( b1, b2, b3, b4 )
 	.from( Actor.ACTOR )
-	.where( ((Field)Actor.ACTOR.ACTOR_ID).lessThan( DSL.inline( 10 ) ) ).fetch( );
+	.where( Actor.ACTOR.ACTOR_ID.lessThan( DSL.inline( UShort.valueOf( 10 ) ) ) ).fetch( );
 
 		return result;
 	}

@@ -8,7 +8,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import org.jooq.*;
-import org.jooq.impl.DSL;
+import org.jooq.impl.*;
+import org.junit.*;
+import org.jooq.types.*;
 
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
 public class testGuestBook

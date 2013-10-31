@@ -1,6 +1,5 @@
 package gudusoft.sql2jooq.sakila.tests;
 
-import static org.jooq.impl.DSL.*;
 import static org.junit.Assert.*;
 import static gudusoft.sakila.Tables.*;
 
@@ -40,9 +39,9 @@ public class SakilaTest0050 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result result = create.select( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME), DSL.count(  ) )
+Result<Record3<String, String, Integer>> result = create.select( Actor.ACTOR.FIRST_NAME, Actor.ACTOR.LAST_NAME, DSL.count(  ) )
 	.from( Actor.ACTOR )
-	.groupBy( DSL.rollup( ((Field)Actor.ACTOR.FIRST_NAME), ((Field)Actor.ACTOR.LAST_NAME) ) ).fetch( );
+	.groupBy( DSL.rollup( Actor.ACTOR.FIRST_NAME, Actor.ACTOR.LAST_NAME ) ).fetch( );
 
 		return result;
 	}
