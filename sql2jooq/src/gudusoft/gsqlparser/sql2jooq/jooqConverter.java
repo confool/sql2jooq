@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jooq.SQLDialect;
+import org.jooq.impl.DefaultDataType;
 import org.jooq.tools.StringUtils;
 
 public class jooqConverter
@@ -235,11 +237,17 @@ public class jooqConverter
 		stringTypefunctions.add( "MySQLDSL.password(" );
 	}
 
+	private List<String> unknownTypefunctions = new ArrayList<String>( );
+	{
+		unknownTypefunctions.add( "DSL.cast(" );
+	}
+
 	private List<String> fixTypeFunctions = new ArrayList<String>( );
 	{
 		fixTypeFunctions.addAll( intTypefunctions );
 		fixTypeFunctions.addAll( bigDecimalTypefunctions );
 		fixTypeFunctions.addAll( stringTypefunctions );
+		fixTypeFunctions.addAll( unknownTypefunctions );
 	}
 
 	public DatabaseMetaData getMetadata( )
@@ -394,7 +402,8 @@ public class jooqConverter
 		StringBuffer buffer = new StringBuffer( );
 		if ( metadata == null
 				|| stmt.getResultColumnList( ) == null
-				|| ignoreGeneric )
+				|| ignoreGeneric
+				|| isUnknownType( stmt ) )
 		{
 			buffer.append( "" );
 		}
@@ -418,6 +427,22 @@ public class jooqConverter
 			buffer.append( ">>" );
 		}
 		return buffer.toString( );
+	}
+
+	private boolean isUnknownType( TSelectSqlStatement stmt )
+	{
+		String function = getOutermostFunction( getResultsetColumnsJavaCode( stmt ) );
+		if ( function != null )
+		{
+			for ( int i = 0; i < unknownTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( unknownTypefunctions.get( i ) ) )
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private String getResultsetColumnType( TCustomSqlStatement stmt,
@@ -452,7 +477,7 @@ public class jooqConverter
 	private void predefineStmt( TSelectSqlStatement stmt )
 	{
 		predefineBuffer.append( "DSLContext create = DSL.using(conn, SQLDialect." )
-				.append( stmt.dbvendor.toString( ).substring( 3 ).toUpperCase( ) )
+				.append( getSQLDialect( stmt.dbvendor ) )
 				.append( ");\n" );
 
 		predefineTableAndField( stmt );
@@ -935,6 +960,44 @@ public class jooqConverter
 
 	private String guessExpressionJavaTypeClass( String javaCode )
 	{
+
+		String function = getOutermostFunction( javaCode );
+
+		if ( function != null )
+		{
+			for ( int i = 0; i < intTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( intTypefunctions.get( i ) ) )
+				{
+					return Integer.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < stringTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( stringTypefunctions.get( i ) ) )
+				{
+					return String.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < bigDecimalTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( bigDecimalTypefunctions.get( i ) ) )
+				{
+					return BigDecimal.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < unknownTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( unknownTypefunctions.get( i ) ) )
+				{
+					return Object.class.getName( );
+				}
+			}
+		}
+
 		List<String> javaClasses = DatabaseMetaUtil.getDataTypeClassNames( );
 		for ( int i = 0; i < javaClasses.size( ); i++ )
 		{
@@ -943,52 +1006,10 @@ public class jooqConverter
 				return className;
 		}
 
-		String function = getOutermostFunction( javaCode );
-
-		if ( function != null )
+		ColumnMetaData column = findColumn( javaCode );
+		if ( column != null )
 		{
-			for ( int i = 0; i < intTypefunctions.size( ); i++ )
-			{
-				if ( function.indexOf( intTypefunctions.get( i ) ) > -1 )
-				{
-					return Integer.class.getName( );
-				}
-			}
-
-			for ( int i = 0; i < stringTypefunctions.size( ); i++ )
-			{
-				if ( function.indexOf( stringTypefunctions.get( i ) ) > -1 )
-				{
-					return String.class.getName( );
-				}
-			}
-
-			for ( int i = 0; i < bigDecimalTypefunctions.size( ); i++ )
-			{
-				if ( function.indexOf( bigDecimalTypefunctions.get( i ) ) > -1 )
-				{
-					return BigDecimal.class.getName( );
-				}
-			}
-		}
-
-		if ( metadata != null )
-		{
-			String[] tableNames = metadata.getTableNames( );
-			for ( int i = 0; i < tableNames.length; i++ )
-			{
-				TableMetaData tableMetaData = metadata.getTableMetaData( tableNames[i] );
-				String[] columnNames = tableMetaData.getColumnNames( );
-				for ( int j = 0; j < columnNames.length; j++ )
-				{
-					if ( javaCode.toLowerCase( )
-							.indexOf( columnNames[j].toLowerCase( ) ) != -1 )
-					{
-						return DatabaseMetaUtil.getSimpleJavaClass( tableMetaData.getColumnMetaData( columnNames[i] )
-								.getJavaTypeClass( ) );
-					}
-				}
-			}
+			return DatabaseMetaUtil.getSimpleJavaClass( column.getJavaTypeClass( ) );
 		}
 
 		Pattern pattern = Pattern.compile( "\".+?\"" );
@@ -1007,6 +1028,28 @@ public class jooqConverter
 			return Integer.class.getName( );
 
 		return Object.class.getName( );
+	}
+
+	private ColumnMetaData findColumn( String javaCode )
+	{
+		if ( metadata != null )
+		{
+			String[] tableNames = metadata.getTableNames( );
+			for ( int i = 0; i < tableNames.length; i++ )
+			{
+				TableMetaData tableMetaData = metadata.getTableMetaData( tableNames[i] );
+				String[] columnNames = tableMetaData.getColumnNames( );
+				for ( int j = 0; j < columnNames.length; j++ )
+				{
+					if ( javaCode.toLowerCase( )
+							.indexOf( columnNames[j].toLowerCase( ) ) != -1 )
+					{
+						return tableMetaData.getColumnMetaData( columnNames[j] );
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	private String getExpressionJavaCode( TExpression expression,
@@ -1268,6 +1311,10 @@ public class jooqConverter
 					stmt,
 					column,
 					true ) );
+			if ( column == null )
+			{
+				column = findColumn( getExpressionJavaCode( inputExpr, stmt ) );
+			}
 		}
 		if ( whenItems != null )
 		{
@@ -1280,6 +1327,11 @@ public class jooqConverter
 					buffer.append( getExpressionJavaCode( item.getComparison_expr( ),
 							stmt,
 							column ) );
+					if ( column == null )
+					{
+						column = findColumn( getExpressionJavaCode( item.getComparison_expr( ),
+								stmt ) );
+					}
 				}
 				buffer.append( ", " );
 				if ( item.getReturn_expr( ) != null )
@@ -1287,6 +1339,11 @@ public class jooqConverter
 					buffer.append( getExpressionJavaCode( item.getReturn_expr( ),
 							stmt,
 							column ) );
+					if ( column == null )
+					{
+						column = findColumn( getExpressionJavaCode( item.getReturn_expr( ),
+								stmt ) );
+					}
 				}
 				buffer.append( " )" );
 			}
@@ -2172,11 +2229,16 @@ public class jooqConverter
 				}
 				else
 				{
-					buffer.append( "Field<"
-							+ getResultsetColumnType( stmt,
-									stmt.getResultColumnList( )
-											.getResultColumn( 0 ) )
-							+ "> " );
+					String type = getResultsetColumnType( stmt,
+							stmt.getResultColumnList( ).getResultColumn( 0 ) );
+					if ( type.equals( DatabaseMetaUtil.getSimpleJavaClass( Object.class.getName( ) ) ) )
+					{
+						buffer.append( "Field " );
+					}
+					else
+					{
+						buffer.append( "Field<" + type + "> " );
+					}
 				}
 				String queryJavaCode = getQueryJavaCode( field.getExpr( )
 						.getSubQuery( ) );
@@ -2208,9 +2270,15 @@ public class jooqConverter
 				}
 				else
 				{
-					predefineBuffer.append( "Field<"
-							+ getResultsetColumnType( container, field )
-							+ "> " );
+					String type = getResultsetColumnType( container, field );
+					if ( type.equals( DatabaseMetaUtil.getSimpleJavaClass( Object.class.getName( ) ) ) )
+					{
+						predefineBuffer.append( "Field " );
+					}
+					else
+					{
+						predefineBuffer.append( "Field<" + type + "> " );
+					}
 				}
 				String queryJavaCode = getExpressionJavaCode( field.getExpr( ),
 						container,
@@ -2253,8 +2321,15 @@ public class jooqConverter
 
 			if ( needCompileFunction( function ) )
 			{
-				buffer.append( compileFunction( function, stmt, columns ) );
-				return buffer.toString( );
+				try
+				{
+					buffer.append( compileFunction( function, stmt, columns ) );
+					return buffer.toString( );
+				}
+				catch ( PlainSQLException e )
+				{
+					throw new PlainSQLException( expression, stmt );
+				}
 			}
 
 			buffer.append( convertFunctionToDSLMethod( content ) );
@@ -2363,6 +2438,10 @@ public class jooqConverter
 				return true;
 			}
 		}
+		if ( content.equalsIgnoreCase( "cast" ) )
+		{
+			return true;
+		}
 		return false;
 	}
 
@@ -2392,8 +2471,54 @@ public class jooqConverter
 						+ ", 10 )";
 			}
 		}
-		throw new UnsupportedOperationException( "\nDoesn't support to compile the function: "
-				+ content.toUpperCase( ) );
+		if ( content.equalsIgnoreCase( "cast" )
+				&& function.getTypename( ) != null )
+		{
+			String typeName = function.getTypename( ).toString( ).toUpperCase( );
+			SQLDialect dialect = getSQLDialect( function.getGsqlparser( )
+					.getDbVendor( ) );
+			try
+			{
+				DefaultDataType.getDataType( dialect, typeName );
+				return "cast( "
+						+ getFunctionArgsJavaCode( function, stmt, columns )
+						+ ", DefaultDataType.getDataType( SQLDialect."
+						+ dialect
+						+ ", \""
+						+ typeName
+						+ "\" ) )";
+			}
+			catch ( Exception e )
+			{
+				throw new PlainSQLException( null, stmt );
+			}
+		}
+		throw new PlainSQLException( null, stmt );
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	private SQLDialect getSQLDialect( EDbVendor dbVendor )
+	{
+		switch ( dbVendor )
+		{
+			case dbvansi :
+				return SQLDialect.SQL99;
+			case dbvdb2 :
+				return SQLDialect.DB2;
+			case dbvmysql :
+				return SQLDialect.MYSQL;
+			case dbvoracle :
+				return SQLDialect.ORACLE;
+			case dbvpostgresql :
+				return SQLDialect.POSTGRES;
+			case dbvsybase :
+				return SQLDialect.SYBASE;
+			case dbvfirebird :
+				return SQLDialect.FIREBIRD;
+			case dbvmssql :
+				return SQLDialect.SQLSERVER;
+		}
+		return SQLDialect.ORACLE;
 	}
 
 	private String getFunctionArgExpressionJavaCode( TExpression argExpression,

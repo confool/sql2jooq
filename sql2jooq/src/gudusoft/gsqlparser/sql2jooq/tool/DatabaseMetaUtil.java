@@ -182,7 +182,7 @@ public class DatabaseMetaUtil
 
 		List<String> clazzes = getDataTypeClassNames( );
 		if ( !clazzes.contains( getSimpleJavaClass( name ) ) )
-			clazzes.add( name );
+			clazzes.add( 0, getSimpleJavaClass( name ) );
 
 		return name;
 	}
