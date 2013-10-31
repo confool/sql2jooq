@@ -2,6 +2,8 @@ package gudusoft.sql2jooq.sakila;
 
 import static org.junit.Assert.assertEquals;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -87,8 +89,42 @@ public class MySQLTest
 			for (int col = 0; col < expected.fields().length; col++) 
 			{
 				Class<?> type = actual.fieldsRow().type(col);
-				assertEquals(expected.get(row).getValue(col, type), actual.getValue(row, col));
+				Object value1 = expected.get(row).getValue(col, type);
+				Object value2 = actual.getValue(row, col);
+				
+				// Plain SQL may return other number types than jOOQ. This might not
+				// be a bug, or at least, it's hard to get correctly
+				if (value1 instanceof Number && value2 instanceof Number) {
+					Number n1 = widen((Number) value1);
+					Number n2 = widen((Number) value2);
+					
+					if (n1.getClass() == n2.getClass()) {
+						assertEquals(n1, n2);
+					}
+					else {
+						assertEquals(new BigDecimal(n1.toString()), new BigDecimal(n2.toString()));
+					}
+				}
+				else {
+					assertEquals(value1, value2);
+				}
 			}
 		}
+	}
+
+	private Number widen(Number value) {
+		if (value instanceof Byte) 
+			return new BigInteger(value.toString());
+		if (value instanceof Short)
+			return new BigInteger(value.toString());
+		if (value instanceof Integer)
+			return new BigInteger(value.toString());
+		if (value instanceof Long)
+			return new BigInteger(value.toString());
+		
+		if (value instanceof Float)
+			return value.doubleValue();
+		
+		return value;
 	}
 }
