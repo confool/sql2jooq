@@ -131,3 +131,11 @@ select 1 from dual order by rand(3) asc;
 select 1 from dual order by rand(3) desc;
 
 select current_user();
+select md5('abc');
+select sha2('abc', 1024);
+select password('abc');
+select encode('abc', 'x');
+select decode(encode('abc', 'x'), 'x');
+select aes_encrypt('abc', 'x');
+select aes_decrypt(aes_encrypt('abc', 'x'), 'x');
+select uncompress(compress('xxx'));

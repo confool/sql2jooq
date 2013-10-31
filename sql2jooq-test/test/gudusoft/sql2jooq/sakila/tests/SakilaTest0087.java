@@ -7,6 +7,7 @@ import java.sql.*;
 
 import org.jooq.*;
 import org.jooq.impl.*;
+import org.jooq.util.mysql.MySQLDSL;
 import org.junit.*;
 import org.jooq.types.*;
 

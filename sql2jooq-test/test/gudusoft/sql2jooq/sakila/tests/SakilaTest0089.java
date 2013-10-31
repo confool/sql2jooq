@@ -7,6 +7,7 @@ import java.sql.*;
 
 import org.jooq.*;
 import org.jooq.impl.*;
+import org.jooq.util.mysql.MySQLDSL;
 import org.junit.*;
 import org.jooq.types.*;
 
@@ -23,7 +24,7 @@ public class SakilaTest0089 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select current_user();";
+		String sql = "select current_user()";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
