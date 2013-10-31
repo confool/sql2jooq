@@ -18,13 +18,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
  * @author Lukas Eder
  */
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
-public class SakilaTest0104 extends MySQLTest
+public class SakilaTest0120 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 12 >> 3";
+		String sql = "select sign(-3)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0104 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.inline( 12 ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.sign( DSL.inline( 3 ).neg(  ) ) ).fetch( );
 
 		return result;
 	}
