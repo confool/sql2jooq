@@ -9,6 +9,7 @@ import java.sql.*;
 import org.jooq.*;
 import org.jooq.impl.*;
 import org.junit.*;
+import org.jooq.types.*;
 
 import gudusoft.sakila.tables.*;
 import gudusoft.sql2jooq.sakila.MySQLTest;
@@ -23,7 +24,7 @@ public class SakilaTest0060 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select nullif(1, 2) a, nullif(1, 1) b;";
+		String sql = "select nullif(1, 2) a, nullif(1, 1) b";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{

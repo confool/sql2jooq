@@ -9,6 +9,7 @@ import java.sql.*;
 import org.jooq.*;
 import org.jooq.impl.*;
 import org.junit.*;
+import org.jooq.types.*;
 
 import gudusoft.sakila.tables.*;
 import gudusoft.sql2jooq.sakila.MySQLTest;
