@@ -127,3 +127,5 @@ select upper('AbC');
 
 select 1 from dual order by rand();
 select 1 from dual order by rand(3);
+select 1 from dual order by rand(3) asc;
+select 1 from dual order by rand(3) desc;
