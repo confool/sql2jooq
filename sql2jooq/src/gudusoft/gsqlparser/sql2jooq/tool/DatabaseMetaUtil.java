@@ -25,26 +25,6 @@ import org.jooq.tools.jdbc.JDBCUtils;
 public class DatabaseMetaUtil
 {
 
-	private final static Map<Integer, String> dataTypeMap = new HashMap<Integer, String>( );
-
-	static
-	{
-		// Get all field in java.sql.Types
-		Field[] fields = java.sql.Types.class.getFields( );
-		for ( int i = 0; i < fields.length; i++ )
-		{
-			try
-			{
-				String name = fields[i].getName( );
-				Integer value = (Integer) fields[i].get( null );
-				dataTypeMap.put( value, name );
-			}
-			catch ( IllegalAccessException e )
-			{
-			}
-		}
-	}
-
 	public static gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData getDataBaseMetaData(
 			Connection con, String databaseName )
 	{
