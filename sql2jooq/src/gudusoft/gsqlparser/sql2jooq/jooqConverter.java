@@ -38,6 +38,9 @@ import gudusoft.gsqlparser.stmt.TUpdateSqlStatement;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +127,50 @@ public class jooqConverter
 		unsupportFunctions.add( "STRCMP" );
 		unsupportFunctions.add( "SPACE" );
 		unsupportFunctions.add( "REVERSE" );
+
+		unsupportFunctions.add( "CONVERT_TZ" );
+		unsupportFunctions.add( "DATE_FORMAT" );
+		unsupportFunctions.add( "DAYNAME" );
+		unsupportFunctions.add( "DAYOFMONTH" );
+		unsupportFunctions.add( "DAYOFWEEK" );
+		unsupportFunctions.add( "DAYOFYEAR" );
+		unsupportFunctions.add( "FROM_DAYS" );
+		unsupportFunctions.add( "FROM_UNIXTIME" );
+		unsupportFunctions.add( "GET_FORMAT" );
+		unsupportFunctions.add( "LAST_DAY" );
+		unsupportFunctions.add( "MAKEDATE" );
+		unsupportFunctions.add( "MAKETIME" );
+		unsupportFunctions.add( "MICROSECOND" );
+		unsupportFunctions.add( "MONTHNAME" );
+		unsupportFunctions.add( "PERIOD_ADD" );
+		unsupportFunctions.add( "PERIOD_DIFF" );
+		unsupportFunctions.add( "QUARTER" );
+		unsupportFunctions.add( "SEC_TO_TIME" );
+		unsupportFunctions.add( "STR_TO_DATE" );
+		unsupportFunctions.add( "SYSDATE" );
+		unsupportFunctions.add( "TIME_FORMAT" );
+		unsupportFunctions.add( "TIME_TO_SEC" );
+		unsupportFunctions.add( "TIMEDIFF" );
+		unsupportFunctions.add( "TIMESTAMP" );
+		unsupportFunctions.add( "TO_DAYS" );
+		unsupportFunctions.add( "TO_SECONDS" );
+		unsupportFunctions.add( "UNIX_TIMESTAMP" );
+		unsupportFunctions.add( "UTC_DATE" );
+		unsupportFunctions.add( "UTC_TIME" );
+		unsupportFunctions.add( "UTC_TIMESTAMP" );
+		unsupportFunctions.add( "WEEK" );
+		unsupportFunctions.add( "WEEKDAY" );
+		unsupportFunctions.add( "WEEKOFYEAR" );
+		unsupportFunctions.add( "YEARWEEK" );
+
+		unsupportFunctions.add( "ADDDATE" );
+		unsupportFunctions.add( "DATE_ADD" );
+		unsupportFunctions.add( "ADDTIME" );
+		unsupportFunctions.add( "SUBDATE" );
+		unsupportFunctions.add( "DATE_SUB" );
+		unsupportFunctions.add( "TIMESTAMPADD" );
+		unsupportFunctions.add( "SUBTIME" );
+
 	}
 
 	private List<String> supportFunctions = new ArrayList<String>( );
@@ -243,6 +290,23 @@ public class jooqConverter
 		stringTypefunctions.add( "MySQLDSL.password(" );
 	}
 
+	private List<String> dateTypefunctions = new ArrayList<String>( );
+	{
+		dateTypefunctions.add( "DSL.currentDate(" );
+		dateTypefunctions.add( "DSL.date(" );
+	}
+
+	private List<String> timeTypefunctions = new ArrayList<String>( );
+	{
+		timeTypefunctions.add( "DSL.currentTime(" );
+		timeTypefunctions.add( "DSL.time(" );
+	}
+
+	private List<String> timestampTypefunctions = new ArrayList<String>( );
+	{
+		timestampTypefunctions.add( "DSL.currentTimestamp(" );
+	}
+
 	private List<String> unknownTypefunctions = new ArrayList<String>( );
 	{
 		unknownTypefunctions.add( "DSL.cast(" );
@@ -253,6 +317,9 @@ public class jooqConverter
 		fixTypeFunctions.addAll( intTypefunctions );
 		fixTypeFunctions.addAll( bigDecimalTypefunctions );
 		fixTypeFunctions.addAll( stringTypefunctions );
+		fixTypeFunctions.addAll( dateTypefunctions );
+		fixTypeFunctions.addAll( timeTypefunctions );
+		fixTypeFunctions.addAll( timestampTypefunctions );
 		fixTypeFunctions.addAll( unknownTypefunctions );
 	}
 
@@ -992,6 +1059,30 @@ public class jooqConverter
 				if ( function.equals( bigDecimalTypefunctions.get( i ) ) )
 				{
 					return BigDecimal.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < dateTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( dateTypefunctions.get( i ) ) )
+				{
+					return Date.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < timeTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( timeTypefunctions.get( i ) ) )
+				{
+					return Time.class.getName( );
+				}
+			}
+
+			for ( int i = 0; i < timestampTypefunctions.size( ); i++ )
+			{
+				if ( function.equals( timestampTypefunctions.get( i ) ) )
+				{
+					return Timestamp.class.getName( );
 				}
 			}
 
@@ -2709,6 +2800,21 @@ public class jooqConverter
 			return "power";
 		if ( function.equalsIgnoreCase( "CEILING" ) )
 			return "ceil";
+		if ( function.equalsIgnoreCase( "CURRENT_DATE" )
+				|| function.equalsIgnoreCase( "CURDATE" ) )
+			return "currentDate";
+		if ( function.equalsIgnoreCase( "CURRENT_TIME" )
+				|| function.equalsIgnoreCase( "CURTIME" ) )
+			return "currentTime";
+		if ( function.equalsIgnoreCase( "CURRENT_TIMESTAMP" )
+				|| function.equalsIgnoreCase( "NOW" )
+				|| function.equalsIgnoreCase( "LOCALTIME" )
+				|| function.equalsIgnoreCase( "LOCALTIMESTAMP" ) )
+			return "currentTimestamp";
+		if ( function.equalsIgnoreCase( "TIMESTAMPDIFF" ) )
+			return "timestampDiff";
+		if ( function.equalsIgnoreCase( "DATE_DIFF" ) )
+			return "dateDiff";
 		return function;
 	}
 
