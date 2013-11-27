@@ -24,7 +24,7 @@ public class SakilaTest0085 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 1 from actor where actor_id = 1 order by rand()";
+		String sql = "select upper('AbC')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,10 +40,7 @@ public class SakilaTest0085 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
-	.from( Actor.ACTOR )
-	.where( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ) )
-	.orderBy( DSL.rand(  ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.upper( DSL.inline( "AbC" ) ) ).fetch( );
 
 		return result;
 	}

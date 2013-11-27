@@ -24,7 +24,7 @@ public class SakilaTest0131 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 5 % 3";
+		String sql = "select 5 mod 3";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{

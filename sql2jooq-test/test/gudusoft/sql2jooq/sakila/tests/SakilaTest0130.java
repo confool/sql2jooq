@@ -24,7 +24,7 @@ public class SakilaTest0130 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 5 mod 3";
+		String sql = "select 2 - 1";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0130 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.inline( 5 ).mod( DSL.inline( 3 ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.inline( 2 ).sub( DSL.inline( 1 ) ) ).fetch( );
 
 		return result;
 	}

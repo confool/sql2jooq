@@ -24,7 +24,7 @@ public class SakilaTest0120 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select sign(-3)";
+		String sql = "select round(1.1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0120 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.sign( DSL.inline( 3 ).neg(  ) ) ).fetch( );
+Result<Record1<Double>> result = create.select( DSL.round( DSL.inline( 1.1 ) ) ).fetch( );
 
 		return result;
 	}

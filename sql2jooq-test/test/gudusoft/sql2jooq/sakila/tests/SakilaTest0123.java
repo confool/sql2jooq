@@ -24,7 +24,7 @@ public class SakilaTest0123 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select degrees(pi())";
+		String sql = "select tan(1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0123 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<java.math.BigDecimal>> result = create.select( DSL.deg( DSL.pi(  ) ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.tan( DSL.inline( 1 ) ) ).fetch( );
 
 		return result;
 	}

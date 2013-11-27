@@ -24,7 +24,7 @@ public class SakilaTest0071 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select ltrim('  barbar  ')";
+		String sql = "select lower('AbC')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0071 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.ltrim( DSL.inline( "  barbar  " ) ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.lower( DSL.inline( "AbC" ) ) ).fetch( );
 
 		return result;
 	}

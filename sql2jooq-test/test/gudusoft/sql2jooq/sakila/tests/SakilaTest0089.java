@@ -24,7 +24,7 @@ public class SakilaTest0089 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select current_user()";
+		String sql = "select 1 from actor where actor_id = 1 order by rand(3) desc";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,10 @@ public class SakilaTest0089 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.currentUser(  ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
+	.from( Actor.ACTOR )
+	.where( Actor.ACTOR.ACTOR_ID.equal( DSL.inline( UShort.valueOf( 1 ) ) ) )
+	.orderBy( DSL.field( "rand(3)" ).desc( ) ).fetch( );
 
 		return result;
 	}

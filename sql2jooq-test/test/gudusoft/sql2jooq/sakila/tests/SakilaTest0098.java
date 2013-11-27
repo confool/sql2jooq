@@ -24,7 +24,7 @@ public class SakilaTest0098 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select bit_count(1234)";
+		String sql = "select uncompress(compress('xxx'))";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0098 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.bitCount( DSL.inline( 1234 ) ) ).fetch( );
+Result<Record1<String>> result = create.select( MySQLDSL.uncompress( MySQLDSL.compress( DSL.inline( "xxx" ) ) ) ).fetch( );
 
 		return result;
 	}

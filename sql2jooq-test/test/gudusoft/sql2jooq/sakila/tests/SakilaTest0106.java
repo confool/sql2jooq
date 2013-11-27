@@ -24,7 +24,7 @@ public class SakilaTest0106 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select acos(0)";
+		String sql = "select abs(-3)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0106 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<java.math.BigDecimal>> result = create.select( DSL.acos( DSL.inline( 0 ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.abs( DSL.inline( 3 ).neg(  ) ) ).fetch( );
 
 		return result;
 	}

@@ -24,7 +24,7 @@ public class SakilaTest0079 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select space(5)";
+		String sql = "select rtrim('  barbar  ')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0079 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Object>> result = create.select( DSL.field( "space(5)" ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.rtrim( DSL.inline( "  barbar  " ) ) ).fetch( );
 
 		return result;
 	}

@@ -24,7 +24,7 @@ public class SakilaTest0126 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 6 / 3";
+		String sql = "select 6 div 3";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{

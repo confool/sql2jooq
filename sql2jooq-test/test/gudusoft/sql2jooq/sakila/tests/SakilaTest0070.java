@@ -24,7 +24,7 @@ public class SakilaTest0070 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select lower('AbC')";
+		String sql = "select locate('bar', 'foobarbar')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0070 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.lower( DSL.inline( "AbC" ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.position( DSL.inline( "bar" ), DSL.inline( "foobarbar" ) ) ).fetch( );
 
 		return result;
 	}

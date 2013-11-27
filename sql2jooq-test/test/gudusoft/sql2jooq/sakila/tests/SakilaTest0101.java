@@ -24,7 +24,7 @@ public class SakilaTest0101 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 12 | 45";
+		String sql = "select ~33";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0101 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.bitOr( DSL.inline( 12 ), DSL.inline( 45 ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.bitNot( DSL.inline( 33 ) ) ).fetch( );
 
 		return result;
 	}

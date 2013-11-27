@@ -24,7 +24,7 @@ public class SakilaTest0092 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select password('abc')";
+		String sql = "select sha2('abc', 1024)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0092 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( MySQLDSL.password( DSL.inline( "abc" ) ) ).fetch( );
+Result<Record1<String>> result = create.select( MySQLDSL.sha2( DSL.inline( "abc" ), DSL.inline( 1024 ) ) ).fetch( );
 
 		return result;
 	}

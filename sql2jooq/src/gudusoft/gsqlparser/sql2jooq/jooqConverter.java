@@ -1260,12 +1260,12 @@ public class jooqConverter
 							stmt,
 							column ) );
 					break;
-				case bitwise_shift_left_t :
+				case left_shift_t :
 					buffer.append( getBitwiseLeftShiftExpressionJavaCode( expression,
 							stmt,
 							column ) );
 					break;
-				case bitwise_shift_right_t :
+				case right_shift_t :
 					buffer.append( getBitwiseRightShiftExpressionJavaCode( expression,
 							stmt,
 							column ) );

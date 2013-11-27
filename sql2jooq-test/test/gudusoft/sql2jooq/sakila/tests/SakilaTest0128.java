@@ -24,7 +24,7 @@ public class SakilaTest0128 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select log2(1024)";
+		String sql = "select log10(1000)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0128 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<java.math.BigDecimal>> result = create.select( DSL.log( DSL.inline( 1024 ), 2 ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.log( DSL.inline( 1000 ), 10 ) ).fetch( );
 
 		return result;
 	}

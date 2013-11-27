@@ -24,7 +24,7 @@ public class SakilaTest0119 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select round(1.1)";
+		String sql = "select power(3, 2)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0119 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Double>> result = create.select( DSL.round( DSL.inline( 1.1 ) ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.power( DSL.inline( 3 ), DSL.inline( 2 ) ) ).fetch( );
 
 		return result;
 	}

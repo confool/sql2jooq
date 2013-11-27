@@ -24,7 +24,7 @@ public class SakilaTest0082 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select substr('foobarbar', 4, 2)";
+		String sql = "select substr('foobarbar', 4)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0082 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.substring( DSL.inline( "foobarbar" ), DSL.inline( 4 ), DSL.inline( 2 ) ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.substring( DSL.inline( "foobarbar" ), DSL.inline( 4 ) ) ).fetch( );
 
 		return result;
 	}

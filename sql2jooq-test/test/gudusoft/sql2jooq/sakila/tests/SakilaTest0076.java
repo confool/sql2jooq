@@ -24,7 +24,7 @@ public class SakilaTest0076 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select reverse('abc')";
+		String sql = "select replace('xyyz', 'y', 'aa')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0076 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Object>> result = create.select( DSL.field( "reverse('abc')" ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.replace( DSL.inline( "xyyz" ), DSL.inline( "y" ), DSL.inline( "aa" ) ) ).fetch( );
 
 		return result;
 	}

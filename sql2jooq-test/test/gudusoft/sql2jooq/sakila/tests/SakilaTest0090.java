@@ -24,7 +24,7 @@ public class SakilaTest0090 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select md5('abc')";
+		String sql = "select current_user()";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0090 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.md5( DSL.inline( "abc" ) ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.currentUser(  ) ).fetch( );
 
 		return result;
 	}

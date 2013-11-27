@@ -24,7 +24,7 @@ public class SakilaTest0096 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select aes_decrypt(aes_encrypt('abc', 'x'), 'x')";
+		String sql = "select aes_encrypt('abc', 'x')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0096 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( MySQLDSL.aesDecrypt( MySQLDSL.aesEncrypt( DSL.inline( "abc" ), DSL.inline( "x" ) ), DSL.inline( "x" ) ) ).fetch( );
+Result<Record1<String>> result = create.select( MySQLDSL.aesEncrypt( DSL.inline( "abc" ), DSL.inline( "x" ) ) ).fetch( );
 
 		return result;
 	}

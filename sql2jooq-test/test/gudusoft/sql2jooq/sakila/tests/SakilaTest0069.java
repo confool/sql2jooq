@@ -18,13 +18,13 @@ import gudusoft.sql2jooq.sakila.MySQLTest;
  * @author Lukas Eder
  */
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
-public class SakilaTest0133 extends MySQLTest
+public class SakilaTest0069 extends MySQLTest
 {
 
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select 2 + 1";
+		String sql = "select 1 from dual where 'ab%cd' like '%!%%' escape '!'";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,9 @@ public class SakilaTest0133 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.inline( 2 ).add( DSL.inline( 1 ) ) ).fetch( );
+Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
+	.from( DSL.dual() )
+	.where( DSL.inline( "ab%cd" ).like( DSL.inline( "%!%%" ), '!' ) ).fetch( );
 
 		return result;
 	}

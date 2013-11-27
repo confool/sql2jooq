@@ -24,7 +24,7 @@ public class SakilaTest0072 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select octet_length('abc')";
+		String sql = "select ltrim('  barbar  ')";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0072 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Integer>> result = create.select( DSL.octetLength( DSL.inline( "abc" ) ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.ltrim( DSL.inline( "  barbar  " ) ) ).fetch( );
 
 		return result;
 	}

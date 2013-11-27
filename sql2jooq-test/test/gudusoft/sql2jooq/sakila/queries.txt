@@ -107,7 +107,7 @@ select instr('foobarbar', 'bar');
 select left('foobarbar', 5);
 select length('abc');
 select 1 from dual where 'abc' like 'a%';
-select 1 from dual where 'ab%cd' like '%!%%' escape '!'
+select 1 from dual where 'ab%cd' like '%!%%' escape '!';
 select locate('bar', 'foobarbar');
 select lower('AbC');
 select ltrim('  barbar  ');

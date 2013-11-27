@@ -24,7 +24,7 @@ public class SakilaTest0122 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select tan(1)";
+		String sql = "select sqrt(4)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0122 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<java.math.BigDecimal>> result = create.select( DSL.tan( DSL.inline( 1 ) ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.sqrt( DSL.inline( 4 ) ) ).fetch( );
 
 		return result;
 	}

@@ -24,7 +24,7 @@ public class SakilaTest0110 extends MySQLTest
 	@Test
 	public void test() throws Exception 
 	{
-		String sql = "select ceil(1.1)";
+		String sql = "select atan(1)";
 		
 		if (sql.toLowerCase().startsWith("select")) 
 		{
@@ -40,7 +40,7 @@ public class SakilaTest0110 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<Double>> result = create.select( DSL.ceil( DSL.inline( 1.1 ) ) ).fetch( );
+Result<Record1<java.math.BigDecimal>> result = create.select( DSL.atan( DSL.inline( 1 ) ) ).fetch( );
 
 		return result;
 	}
