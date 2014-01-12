@@ -1,10 +1,14 @@
 
 package gudusoft.gsqlparser.sql2jooq.tool;
 
+import gudusoft.gsqlparser.EDbVendor;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.jooq.SQLDialect;
 
 public class GenerationUtil
 {
@@ -100,5 +104,30 @@ public class GenerationUtil
 		}
 
 		return sb.toString( );
+	}
+
+	@SuppressWarnings("incomplete-switch")
+	public static SQLDialect getSQLDialect( EDbVendor dbVendor )
+	{
+		switch ( dbVendor )
+		{
+			case dbvansi :
+				return SQLDialect.SQL99;
+			case dbvdb2 :
+				return SQLDialect.DB2;
+			case dbvmysql :
+				return SQLDialect.MYSQL;
+			case dbvoracle :
+				return SQLDialect.ORACLE;
+			case dbvpostgresql :
+				return SQLDialect.POSTGRES;
+			case dbvsybase :
+				return SQLDialect.SYBASE;
+			case dbvfirebird :
+				return SQLDialect.FIREBIRD;
+			case dbvmssql :
+				return SQLDialect.SQLSERVER;
+		}
+		return SQLDialect.ORACLE;
 	}
 }
