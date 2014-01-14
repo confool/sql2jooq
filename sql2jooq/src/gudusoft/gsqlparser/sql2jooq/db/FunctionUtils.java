@@ -114,6 +114,10 @@ public class FunctionUtils
 		unsupportFunctions.add( "TIMESTAMPADD" );
 		unsupportFunctions.add( "SUBTIME" );
 
+		unsupportFunctions.add( "CBRT" );
+		unsupportFunctions.add( "DIV" );
+		unsupportFunctions.add( "SETSEED" );
+		unsupportFunctions.add( "WIDTH_BUCKET" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
