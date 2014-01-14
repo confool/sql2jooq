@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<project name="School Database Generation Tool" default="generate-library">
+	<path id="library">
+		<fileset dir="./../../../lib">
+			<include name="**/*.jar"></include>
+		</fileset>
+	</path>
+
+	<target name="generate-library">
+		<java fork="true" classname="org.jooq.util.GenerationTool"
+			classpathref="library">
+			<classpath path="." />
+			<arg value="/school.xml" />
+		</java>
+    </target>
+</project>
+

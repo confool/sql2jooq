@@ -50,12 +50,19 @@ public class DatabaseMetaUtil
 						null );
 				while ( columns.next( ) )
 				{
-					ColumnMetaData columnMetaData = new ColumnMetaData( );
-					columnMetaData.setColumnName( columns.getString( "COLUMN_NAME" ) );
-					columnMetaData.setTypeName( columns.getString( "TYPE_NAME" ) );
-					columnMetaData.setJavaTypeClass( getDataTypeClassName( con,
-							columnMetaData.getTypeName( ) ) );
-					tableMetaDatas[i].addColumnMetaData( columnMetaData );
+					try
+					{
+						ColumnMetaData columnMetaData = new ColumnMetaData( );
+						columnMetaData.setColumnName( columns.getString( "COLUMN_NAME" ) );
+						columnMetaData.setTypeName( columns.getString( "TYPE_NAME" ) );
+						columnMetaData.setJavaTypeClass( getDataTypeClassName( con,
+								columnMetaData.getTypeName( ) ) );
+						tableMetaDatas[i].addColumnMetaData( columnMetaData );
+					}
+					catch ( Exception e )
+					{
+						System.err.println( "Exception : " + e.getMessage( ) );
+					}
 				}
 			}
 		}
