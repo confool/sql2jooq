@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="../lib/mysql-connector-java-5.1.23-bin.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/sql2jooq"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/lib"/>
+	<classpathentry kind="lib" path="../lib//postgresql-9.3-1100.jdbc4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
