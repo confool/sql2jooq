@@ -118,6 +118,15 @@ public class FunctionUtils
 		unsupportFunctions.add( "DIV" );
 		unsupportFunctions.add( "SETSEED" );
 		unsupportFunctions.add( "WIDTH_BUCKET" );
+		
+		unsupportFunctions.add( "PG_SLEEP" );
+		
+		unsupportFunctions.add( "ENUM_FIRST" );
+		unsupportFunctions.add( "ENUM_LAST" );
+		unsupportFunctions.add( "ENUM_RANGE" );
+		
+		unsupportFunctions.add( "FORMAT" );
+
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
