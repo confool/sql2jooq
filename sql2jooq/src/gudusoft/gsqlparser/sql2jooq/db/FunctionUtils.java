@@ -117,6 +117,7 @@ public class FunctionUtils
 		unsupportFunctions.add( "CBRT" );
 		unsupportFunctions.add( "DIV" );
 		unsupportFunctions.add( "SETSEED" );
+
 		unsupportFunctions.add( "WIDTH_BUCKET" );
 		
 		unsupportFunctions.add( "PG_SLEEP" );
@@ -126,6 +127,12 @@ public class FunctionUtils
 		unsupportFunctions.add( "ENUM_RANGE" );
 		
 		unsupportFunctions.add( "FORMAT" );
+
+		unsupportFunctions.add( "XMLPI" );
+		unsupportFunctions.add( "XMLFOREST" );
+		unsupportFunctions.add( "XMLELEMENT" );
+		unsupportFunctions.add( "XMLCONCAT" );
+		unsupportFunctions.add( "XMLCOMMENT" );
 
 	}
 
