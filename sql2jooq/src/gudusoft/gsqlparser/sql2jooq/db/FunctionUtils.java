@@ -139,6 +139,20 @@ public class FunctionUtils
 		unsupportFunctions.add( "TO_NUMBER" );
 		unsupportFunctions.add( "TO_NUMBER" );
 
+		unsupportFunctions.add( "GET_CURRENT_TS_CONFIG" );
+		unsupportFunctions.add( "NUMNODE" );
+		unsupportFunctions.add( "PLAINTO_TSQUERY" );
+		unsupportFunctions.add( "QUERYTREE" );
+		unsupportFunctions.add( "SETWEIGHT" );
+		unsupportFunctions.add( "STRIP" );
+		unsupportFunctions.add( "TO_TSQUERY" );
+		unsupportFunctions.add( "TO_TSVECTOR" );
+		unsupportFunctions.add( "TS_HEADLINE" );
+		unsupportFunctions.add( "TS_RANK" );
+		unsupportFunctions.add( "TS_RANK_CD" );
+		unsupportFunctions.add( "TS_REWRITE" );
+		unsupportFunctions.add( "TSVECTOR_UPDATE_TRIGGER" );
+		unsupportFunctions.add( "TSVECTOR_UPDATE_TRIGGER_COLUMN" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
