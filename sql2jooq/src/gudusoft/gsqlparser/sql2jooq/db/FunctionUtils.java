@@ -133,6 +133,11 @@ public class FunctionUtils
 		unsupportFunctions.add( "XMLELEMENT" );
 		unsupportFunctions.add( "XMLCONCAT" );
 		unsupportFunctions.add( "XMLCOMMENT" );
+		
+		unsupportFunctions.add( "TO_CHAR" );
+		unsupportFunctions.add( "TO_DATE" );
+		unsupportFunctions.add( "TO_NUMBER" );
+		unsupportFunctions.add( "TO_NUMBER" );
 
 	}
 
