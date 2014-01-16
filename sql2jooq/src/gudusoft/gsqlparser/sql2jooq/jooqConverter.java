@@ -2430,11 +2430,10 @@ public class jooqConverter
 		String content = function.toString( ).toLowerCase( );
 		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
 		boolean flag = false;
-		for ( int i = 0; i < FunctionUtils.getUnsupportFunctions( ).size( ); i++ )
+		List<String> unsupportFunctions = FunctionUtils.getUnsupportFunctions( sqlparser.getDbVendor( ) );
+		for ( int i = 0; i < unsupportFunctions.size( ); i++ )
 		{
-			if ( FunctionUtils.getUnsupportFunctions( )
-					.get( i )
-					.equalsIgnoreCase( content ) )
+			if ( unsupportFunctions.get( i ).equalsIgnoreCase( content ) )
 			{
 				flag = true;
 				break;

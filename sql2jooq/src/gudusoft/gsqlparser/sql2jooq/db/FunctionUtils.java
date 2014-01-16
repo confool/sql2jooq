@@ -1,11 +1,24 @@
 
 package gudusoft.gsqlparser.sql2jooq.db;
 
+import gudusoft.gsqlparser.EDbVendor;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class FunctionUtils
 {
+
+	private static Map<EDbVendor, List<String>> specifyUnsupportFuctions = new HashMap<EDbVendor, List<String>>( );
+
+	private static List<String> unsupportPostgresFunctions = new ArrayList<String>( );
+	static
+	{
+		unsupportPostgresFunctions.add( "DECODE" );
+		unsupportPostgresFunctions.add( "ENCODE" );
+	}
 
 	private static List<String> unsupportFunctions = new ArrayList<String>( );
 	static
@@ -119,13 +132,13 @@ public class FunctionUtils
 		unsupportFunctions.add( "SETSEED" );
 
 		unsupportFunctions.add( "WIDTH_BUCKET" );
-		
+
 		unsupportFunctions.add( "PG_SLEEP" );
-		
+
 		unsupportFunctions.add( "ENUM_FIRST" );
 		unsupportFunctions.add( "ENUM_LAST" );
 		unsupportFunctions.add( "ENUM_RANGE" );
-		
+
 		unsupportFunctions.add( "FORMAT" );
 
 		unsupportFunctions.add( "XMLPI" );
@@ -133,7 +146,7 @@ public class FunctionUtils
 		unsupportFunctions.add( "XMLELEMENT" );
 		unsupportFunctions.add( "XMLCONCAT" );
 		unsupportFunctions.add( "XMLCOMMENT" );
-		
+
 		unsupportFunctions.add( "TO_CHAR" );
 		unsupportFunctions.add( "TO_DATE" );
 		unsupportFunctions.add( "TO_NUMBER" );
@@ -153,6 +166,13 @@ public class FunctionUtils
 		unsupportFunctions.add( "TS_REWRITE" );
 		unsupportFunctions.add( "TSVECTOR_UPDATE_TRIGGER" );
 		unsupportFunctions.add( "TSVECTOR_UPDATE_TRIGGER_COLUMN" );
+
+		unsupportFunctions.add( "OVERLAY" );
+		unsupportFunctions.add( "BTRIM" );
+		unsupportFunctions.add( "GET_BIT" );
+		unsupportFunctions.add( "GET_BYTE" );
+		unsupportFunctions.add( "SET_BIT" );
+		unsupportFunctions.add( "SET_BYTE" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
@@ -314,8 +334,20 @@ public class FunctionUtils
 		fixTypeFunctions.addAll( unknownTypefunctions );
 	}
 
-	public static List<String> getUnsupportFunctions( )
+	public static List<String> getUnsupportFunctions( EDbVendor eDbVendor )
 	{
+		if ( eDbVendor == EDbVendor.dbvpostgresql )
+		{
+			if ( !specifyUnsupportFuctions.containsKey( EDbVendor.dbvpostgresql ) )
+			{
+				List<String> functions = new ArrayList<String>( );
+				functions.addAll( unsupportFunctions );
+				functions.removeAll( unsupportPostgresFunctions );
+				functions.addAll( unsupportPostgresFunctions );
+				specifyUnsupportFuctions.put( eDbVendor, functions );
+			}
+			return specifyUnsupportFuctions.get( eDbVendor );
+		}
 		return unsupportFunctions;
 	}
 
