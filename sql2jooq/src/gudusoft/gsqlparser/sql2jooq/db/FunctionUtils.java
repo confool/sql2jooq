@@ -181,6 +181,21 @@ public class FunctionUtils
 		unsupportFunctions.add( "XMLROOT" );
 		unsupportFunctions.add( "XMLAGG" );
 		unsupportFunctions.add( "XMLEXISTS" );
+		
+		unsupportFunctions.add( "TABLE_TO_XML" );
+		unsupportFunctions.add( "QUERY_TO_XML" );
+		unsupportFunctions.add( "CURSOR_TO_XML" );
+		unsupportFunctions.add( "TABLE_TO_XMLSCHEMA" );
+		unsupportFunctions.add( "QUERY_TO_XMLSCHEMA" );
+		unsupportFunctions.add( "CURSOR_TO_XMLSCHEMA" );
+		unsupportFunctions.add( "TABLE_TO_XML_AND_XMLSCHEMA" );
+		unsupportFunctions.add( "QUERY_TO_XML_AND_XMLSCHEMA" );
+		unsupportFunctions.add( "SCHEMA_TO_XML" );
+		unsupportFunctions.add( "SCHEMA_TO_XMLSCHEMA" );
+		unsupportFunctions.add( "SCHEMA_TO_XML_AND_XMLSCHEMA" );
+		unsupportFunctions.add( "DATABASE_TO_XML" );
+		unsupportFunctions.add( "DATABASE_TO_XMLSCHEMA" );
+		unsupportFunctions.add( "DATABASE_TO_XML_AND_XMLSCHEMA" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
