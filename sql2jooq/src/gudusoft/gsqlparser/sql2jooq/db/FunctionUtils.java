@@ -180,6 +180,7 @@ public class FunctionUtils
 		
 		unsupportFunctions.add( "XMLROOT" );
 		unsupportFunctions.add( "XMLAGG" );
+		unsupportFunctions.add( "XMLEXISTS" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
