@@ -177,6 +177,9 @@ public class FunctionUtils
 		unsupportFunctions.add( "XML_IS_WELL_FORMED" );
 		unsupportFunctions.add( "XML_IS_WELL_FORMED_DOCUMENT" );
 		unsupportFunctions.add( "XML_IS_WELL_FORMED_CONTENT" );
+		
+		unsupportFunctions.add( "XMLROOT" );
+		unsupportFunctions.add( "XMLAGG" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
