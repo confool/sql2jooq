@@ -173,6 +173,10 @@ public class FunctionUtils
 		unsupportFunctions.add( "GET_BYTE" );
 		unsupportFunctions.add( "SET_BIT" );
 		unsupportFunctions.add( "SET_BYTE" );
+		
+		unsupportFunctions.add( "XML_IS_WELL_FORMED" );
+		unsupportFunctions.add( "XML_IS_WELL_FORMED_DOCUMENT" );
+		unsupportFunctions.add( "XML_IS_WELL_FORMED_CONTENT" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
