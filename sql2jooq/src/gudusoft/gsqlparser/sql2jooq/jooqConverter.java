@@ -620,6 +620,10 @@ public class jooqConverter
 							}
 							buffer.append( " )\n\t" );
 						}
+						else
+						{
+							buffer.append( " )\n\t" );
+						}
 					}
 				}
 
@@ -2507,7 +2511,8 @@ public class jooqConverter
 
 			tableName = caseTableName( tableName, stmt );
 
-			if ( table!=null && table.getTableName( ) != null
+			if ( table != null
+					&& table.getTableName( ) != null
 					&& columnName.equalsIgnoreCase( table.getTableName( )
 							.toString( ) ) )
 			{
