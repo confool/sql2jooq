@@ -2507,7 +2507,7 @@ public class jooqConverter
 
 			tableName = caseTableName( tableName, stmt );
 
-			if ( table.getTableName( ) != null
+			if ( table!=null && table.getTableName( ) != null
 					&& columnName.equalsIgnoreCase( table.getTableName( )
 							.toString( ) ) )
 			{
@@ -2625,6 +2625,11 @@ public class jooqConverter
 			{
 				return table;
 			}
+		}
+
+		if ( stmt.getParentStmt( ) != null )
+		{
+			return getTableFromName( tableName, stmt.getParentStmt( ) );
 		}
 		return null;
 	}
