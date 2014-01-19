@@ -568,7 +568,8 @@ public class jooqConverter
 						{
 							buffer.append( ".rightOuterJoin( " );
 						}
-						else if ( joinItem.getJoinType( ) == EJoinType.natural )
+						else if ( joinItem.getJoinType( ) == EJoinType.natural
+								|| joinItem.getJoinType( ) == EJoinType.natural_inner )
 						{
 							buffer.append( ".naturalJoin( " );
 						}
