@@ -196,6 +196,24 @@ public class FunctionUtils
 		unsupportFunctions.add( "DATABASE_TO_XML" );
 		unsupportFunctions.add( "DATABASE_TO_XMLSCHEMA" );
 		unsupportFunctions.add( "DATABASE_TO_XML_AND_XMLSCHEMA" );
+		
+		unsupportFunctions.add( "CURRENT_CATALOG" );
+		unsupportFunctions.add( "CURRENT_DATABASE" );
+		unsupportFunctions.add( "CURRENT_QUERY" );
+		unsupportFunctions.add( "CURRENT_SCHEMA" );
+		unsupportFunctions.add( "CURRENT_SCHEMAS" );
+		unsupportFunctions.add( "INET_CLIENT_ADDR" );
+		unsupportFunctions.add( "INET_CLIENT_PORT" );
+		unsupportFunctions.add( "INET_SERVER_ADDR" );
+		unsupportFunctions.add( "PG_BACKEND_PID" );
+		unsupportFunctions.add( "PG_CONF_LOAD_TIME" );
+		unsupportFunctions.add( "PG_IS_OTHER_TEMP_SCHEMA" );
+		unsupportFunctions.add( "PG_LISTENING_CHANNELS" );
+		unsupportFunctions.add( "PG_MY_TEMP_SCHEMA" );
+		unsupportFunctions.add( "PG_POSTMASTER_START_TIME" );
+		unsupportFunctions.add( "PG_TRIGGER_DEPTH" );
+		unsupportFunctions.add( "SESSION_USER" );
+		unsupportFunctions.add( "VERSION" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
@@ -452,6 +470,7 @@ public class FunctionUtils
 
 	public static String convertFunctionToDSLMethod( String function )
 	{
+		unsupportFunctions.add( "user" );
 		if ( function.equalsIgnoreCase( "IFNULL" ) )
 			return "nvl";
 		if ( function.equalsIgnoreCase( "BIT_LENGTH" ) )
@@ -480,7 +499,7 @@ public class FunctionUtils
 			return "desEncrypt";
 		if ( function.equalsIgnoreCase( "UNCOMPRESSED_LENGTH" ) )
 			return "uncompressedLength";
-		if ( function.equalsIgnoreCase( "CURRENT_USER" ) )
+		if ( function.equalsIgnoreCase( "CURRENT_USER" ) || function.equalsIgnoreCase( "USER" ))
 			return "currentUser";
 		if ( function.equalsIgnoreCase( "SHA" ) )
 			return "sha1";
