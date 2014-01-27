@@ -1128,6 +1128,11 @@ public class jooqConverter
 							stmt,
 							columns ) );
 					break;
+				case array_constructor_t :
+					buffer.append( getListExpressionJavaCode( expression,
+							stmt,
+							columns ) );
+					break;
 				case unknown_t :
 					throw new PlainSQLException( expression, stmt );
 				default :
@@ -2199,6 +2204,10 @@ public class jooqConverter
 			if ( FunctionUtils.isMysqlDSL( content ) )
 			{
 				buffer.append( "MySQLDSL." );
+			}
+			else if ( FunctionUtils.isPostgresDSL( content ) )
+			{
+				buffer.append( "PostgresDSL." );
 			}
 			else
 			{

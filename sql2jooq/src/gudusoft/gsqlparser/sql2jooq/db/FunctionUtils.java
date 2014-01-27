@@ -173,15 +173,15 @@ public class FunctionUtils
 		unsupportFunctions.add( "GET_BYTE" );
 		unsupportFunctions.add( "SET_BIT" );
 		unsupportFunctions.add( "SET_BYTE" );
-		
+
 		unsupportFunctions.add( "XML_IS_WELL_FORMED" );
 		unsupportFunctions.add( "XML_IS_WELL_FORMED_DOCUMENT" );
 		unsupportFunctions.add( "XML_IS_WELL_FORMED_CONTENT" );
-		
+
 		unsupportFunctions.add( "XMLROOT" );
 		unsupportFunctions.add( "XMLAGG" );
 		unsupportFunctions.add( "XMLEXISTS" );
-		
+
 		unsupportFunctions.add( "TABLE_TO_XML" );
 		unsupportFunctions.add( "QUERY_TO_XML" );
 		unsupportFunctions.add( "CURSOR_TO_XML" );
@@ -196,7 +196,7 @@ public class FunctionUtils
 		unsupportFunctions.add( "DATABASE_TO_XML" );
 		unsupportFunctions.add( "DATABASE_TO_XMLSCHEMA" );
 		unsupportFunctions.add( "DATABASE_TO_XML_AND_XMLSCHEMA" );
-		
+
 		unsupportFunctions.add( "CURRENT_CATALOG" );
 		unsupportFunctions.add( "CURRENT_DATABASE" );
 		unsupportFunctions.add( "CURRENT_QUERY" );
@@ -214,7 +214,7 @@ public class FunctionUtils
 		unsupportFunctions.add( "PG_TRIGGER_DEPTH" );
 		unsupportFunctions.add( "SESSION_USER" );
 		unsupportFunctions.add( "VERSION" );
-		
+
 		unsupportFunctions.add( "ARRAY_TO_JSON" );
 		unsupportFunctions.add( "ROW_TO_JSON" );
 		unsupportFunctions.add( "TO_JSON" );
@@ -227,6 +227,15 @@ public class FunctionUtils
 		unsupportFunctions.add( "JSON_POPULATE_RECORD" );
 		unsupportFunctions.add( "JSON_POPULATE_RECORDSET" );
 		unsupportFunctions.add( "JSON_ARRAY_ELEMENTS" );
+
+		unsupportFunctions.add( "ARRAY_NDIMS" );
+		unsupportFunctions.add( "ARRAY_DIMS" );
+		unsupportFunctions.add( "ARRAY_FILL" );
+		unsupportFunctions.add( "ARRAY_LENGTH" );
+		unsupportFunctions.add( "ARRAY_LOWER" );
+		unsupportFunctions.add( "ARRAY_REMOVE" );
+		unsupportFunctions.add( "ARRAY_REPLACE" );
+		unsupportFunctions.add( "ARRAY_UPPER" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );
@@ -348,6 +357,7 @@ public class FunctionUtils
 		stringTypefunctions.add( "MySQLDSL.sha1(" );
 		stringTypefunctions.add( "MySQLDSL.sha2(" );
 		stringTypefunctions.add( "MySQLDSL.password(" );
+		stringTypefunctions.add( "PostgresDSL.arrayToString(" );
 	}
 
 	private static List<String> dateTypefunctions = new ArrayList<String>( );
@@ -450,6 +460,21 @@ public class FunctionUtils
 		return fixTypeFunctions;
 	}
 
+	public static boolean isPostgresDSL( String function )
+	{
+		if ( function.equalsIgnoreCase( "ARRAY_APPEND" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "ARRAY_CAT" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "ARRAY_PREPEND" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "ARRAY_TO_STRING" ) )
+			return true;
+		if ( function.equalsIgnoreCase( "STRING_TO_ARRAY" ) )
+			return true;
+		return false;
+	}
+
 	public static boolean isMysqlDSL( String function )
 	{
 		if ( function.equalsIgnoreCase( "AES_DECRYPT" ) )
@@ -483,7 +508,6 @@ public class FunctionUtils
 
 	public static String convertFunctionToDSLMethod( String function )
 	{
-		unsupportFunctions.add( "user" );
 		if ( function.equalsIgnoreCase( "IFNULL" ) )
 			return "nvl";
 		if ( function.equalsIgnoreCase( "BIT_LENGTH" ) )
@@ -512,7 +536,8 @@ public class FunctionUtils
 			return "desEncrypt";
 		if ( function.equalsIgnoreCase( "UNCOMPRESSED_LENGTH" ) )
 			return "uncompressedLength";
-		if ( function.equalsIgnoreCase( "CURRENT_USER" ) || function.equalsIgnoreCase( "USER" ))
+		if ( function.equalsIgnoreCase( "CURRENT_USER" )
+				|| function.equalsIgnoreCase( "USER" ) )
 			return "currentUser";
 		if ( function.equalsIgnoreCase( "SHA" ) )
 			return "sha1";
@@ -543,6 +568,17 @@ public class FunctionUtils
 			return "timestampDiff";
 		if ( function.equalsIgnoreCase( "DATE_DIFF" ) )
 			return "dateDiff";
+		
+		if ( function.equalsIgnoreCase( "ARRAY_APPEND" ) )
+			return "arrayAppend";
+		if ( function.equalsIgnoreCase( "ARRAY_CAT" ) )
+			return "arrayCat";
+		if ( function.equalsIgnoreCase( "ARRAY_PREPEND" ) )
+			return "arrayPrepend";
+		if ( function.equalsIgnoreCase( "ARRAY_TO_STRING" ) )
+			return "arrayToString";
+		if ( function.equalsIgnoreCase( "STRING_TO_ARRAY" ) )
+			return "stringToArray";
 		return function;
 	}
 }
