@@ -518,7 +518,7 @@ public class jooqConverter
 					catch ( PlainSQLException e )
 					{
 						buffer.append( "DSL.field( \""
-								+ column.toString( )
+								+ escape( column.toString( ) )
 								+ "\" )" );
 					}
 					if ( i < stmt.getResultColumnList( ).size( ) - 1 )
@@ -1120,6 +1120,8 @@ public class jooqConverter
 							stmt,
 							columns ) );
 					break;
+				case unknown_t :
+					throw new PlainSQLException( expression, stmt );
 				default :
 					throw new UnsupportedOperationException( "\nExpression: "
 							+ expression.toString( )
@@ -1132,19 +1134,24 @@ public class jooqConverter
 			if ( !e.isFromField( ) )
 			{
 				buffer.append( "DSL.condition( \""
-						+ expression.toString( )
+						+ escape( expression.toString( ) )
 						+ "\" )" );
 			}
 			else if ( e.needConvertToField( ) )
 			{
 				buffer.append( "DSL.field( \""
-						+ expression.toString( )
+						+ escape( expression.toString( ) )
 						+ "\" )" );
 			}
 			else
 				throw e;
 		}
 		return buffer.toString( );
+	}
+
+	private String escape( String content )
+	{
+		return content.replace( "\"", "\\\"" );
 	}
 
 	private String getExistsExpressionJavaCode( TExpression expression )
