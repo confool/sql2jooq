@@ -214,6 +214,19 @@ public class FunctionUtils
 		unsupportFunctions.add( "PG_TRIGGER_DEPTH" );
 		unsupportFunctions.add( "SESSION_USER" );
 		unsupportFunctions.add( "VERSION" );
+		
+		unsupportFunctions.add( "ARRAY_TO_JSON" );
+		unsupportFunctions.add( "ROW_TO_JSON" );
+		unsupportFunctions.add( "TO_JSON" );
+		unsupportFunctions.add( "JSON_ARRAY_LENGTH" );
+		unsupportFunctions.add( "JSON_EACH" );
+		unsupportFunctions.add( "JSON_EACH_TEXT" );
+		unsupportFunctions.add( "JSON_EXTRACT_PATH" );
+		unsupportFunctions.add( "JSON_EXTRACT_PATH_TEXT" );
+		unsupportFunctions.add( "JSON_OBJECT_KEYS" );
+		unsupportFunctions.add( "JSON_POPULATE_RECORD" );
+		unsupportFunctions.add( "JSON_POPULATE_RECORDSET" );
+		unsupportFunctions.add( "JSON_ARRAY_ELEMENTS" );
 	}
 
 	private static List<String> supportFunctions = new ArrayList<String>( );

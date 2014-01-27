@@ -1113,6 +1113,13 @@ public class jooqConverter
 					break;
 				case unary_binary_operator_t :
 					throw new PlainSQLException( expression, stmt );
+				case typecast_t :
+					throw new PlainSQLException( expression, stmt );
+				case row_constructor_t :
+					buffer.append( getListExpressionJavaCode( expression,
+							stmt,
+							columns ) );
+					break;
 				default :
 					throw new UnsupportedOperationException( "\nExpression: "
 							+ expression.toString( )
