@@ -855,13 +855,21 @@ public class jooqConverter
 			}
 		}
 
+		String className = null;
+		int classIndex = -1;
 		List<String> javaClasses = DatabaseMetaUtil.getDataTypeClassNames( );
 		for ( int i = 0; i < javaClasses.size( ); i++ )
 		{
-			String className = javaClasses.get( i );
-			if ( javaCode.indexOf( className ) != -1 )
-				return className;
+			String clazz = javaClasses.get( i );
+			int index = javaCode.lastIndexOf( clazz );
+			if ( index > classIndex )
+			{
+				className = clazz;
+				classIndex = index;
+			}
 		}
+		if ( className != null )
+			return className;
 
 		ColumnMetaData column = findColumn( javaCode );
 		if ( column != null )
@@ -1453,6 +1461,7 @@ public class jooqConverter
 			content = "\""
 					+ content.substring( 1, content.length( ) - 1 )
 					+ "\"";
+			return "String.valueOf( " + content + " )";
 		}
 		if ( column != null && !ignoreGeneric )
 		{
