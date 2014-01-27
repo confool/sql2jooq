@@ -18,9 +18,6 @@ public class FunctionUtils
 	{
 		unsupportPostgresFunctions.add( "DECODE" );
 		unsupportPostgresFunctions.add( "ENCODE" );
-
-		unsupportPostgresFunctions.add( "CURRENT_SETTING" );
-		unsupportPostgresFunctions.add( "SET_CONFIG" );
 	}
 
 	private static List<String> unsupportFunctions = new ArrayList<String>( );
@@ -239,6 +236,10 @@ public class FunctionUtils
 		unsupportFunctions.add( "ARRAY_REMOVE" );
 		unsupportFunctions.add( "ARRAY_REPLACE" );
 		unsupportFunctions.add( "ARRAY_UPPER" );
+		
+		unsupportFunctions.add( "CURRENT_SETTING" );
+		unsupportFunctions.add( "SET_CONFIG" );
+		unsupportFunctions.add( "GENERATE_SUBSCRIPTS" );
 	}
 
 	private static List<String> supportFunctionRegexs = new ArrayList<String>( );
