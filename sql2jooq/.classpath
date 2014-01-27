@@ -7,7 +7,9 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="../lib/gsp.jar"/>
-	<classpathentry kind="lib" path="../lib/jooq-3.1.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/lib"/>
+	<classpathentry kind="lib" path="../lib/jooq-3.2.2.jar"/>
+	<classpathentry kind="lib" path="../lib/jooq-codegen-3.2.2.jar"/>
+	<classpathentry kind="lib" path="../lib/jooq-meta-3.2.2.jar"/>
+	<classpathentry kind="lib" path="../lib/jooq-scala-3.2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

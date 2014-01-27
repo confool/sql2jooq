@@ -9,6 +9,7 @@ import org.jooq.*;
 import org.jooq.impl.*;
 import org.junit.*;
 import org.jooq.types.*;
+import org.jooq.util.postgres.*;
 
 @SuppressWarnings({ "unchecked", "rawtypes", "unused", "all" })
 public class testSchool

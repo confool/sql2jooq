@@ -2,11 +2,10 @@
 <classpath>
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="lib" path="gsp.jar"/>
-	<classpathentry kind="lib" path="jooq-3.1.0.jar"/>
-	<classpathentry kind="lib" path="jooq-codegen-3.1.0.jar"/>
-	<classpathentry kind="lib" path="jooq-console-3.1.0.jar"/>
-	<classpathentry kind="lib" path="jooq-meta-3.1.0.jar"/>
-	<classpathentry kind="lib" path="jooq-scala-3.1.0.jar"/>
+	<classpathentry kind="lib" path="jooq-3.2.2.jar"/>
+	<classpathentry kind="lib" path="jooq-codegen-3.2.2.jar"/>
+	<classpathentry kind="lib" path="jooq-meta-3.2.2.jar"/>
+	<classpathentry kind="lib" path="jooq-scala-3.2.2.jar"/>
 	<classpathentry kind="lib" path="mysql-connector-java-5.1.23-bin.jar"/>
 	<classpathentry kind="lib" path="postgresql-9.3-1100.jdbc4.jar"/>
 	<classpathentry kind="lib" path="junit-4.11.jar"/>
