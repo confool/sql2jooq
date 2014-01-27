@@ -2507,15 +2507,33 @@ public class jooqConverter
 				break;
 			}
 		}
-		if ( flag )
+
+		if ( !flag )
 		{
-			for ( int i = 0; i < FunctionUtils.getSupportFunctions( ).size( ); i++ )
+			for ( int i = 0; i < FunctionUtils.getUnSupportFunctionRegexs( )
+					.size( ); i++ )
 			{
-				String pattern = FunctionUtils.getSupportFunctions( ).get( i );
+				String pattern = FunctionUtils.getUnSupportFunctionRegexs( )
+						.get( i );
 				if ( function.toString( ).matches( pattern ) )
 				{
-					flag = false;
+					flag = true;
 					break;
+				}
+			}
+		}
+		
+		if ( flag )
+		{
+
+			for ( int i = 0; i < FunctionUtils.getSupportFunctionRegexs( )
+					.size( ); i++ )
+			{
+				String pattern = FunctionUtils.getSupportFunctionRegexs( )
+						.get( i );
+				if ( function.toString( ).matches( pattern ) )
+				{
+					return true;
 				}
 			}
 		}

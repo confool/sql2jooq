@@ -18,6 +18,9 @@ public class FunctionUtils
 	{
 		unsupportPostgresFunctions.add( "DECODE" );
 		unsupportPostgresFunctions.add( "ENCODE" );
+
+		unsupportPostgresFunctions.add( "CURRENT_SETTING" );
+		unsupportPostgresFunctions.add( "SET_CONFIG" );
 	}
 
 	private static List<String> unsupportFunctions = new ArrayList<String>( );
@@ -238,10 +241,16 @@ public class FunctionUtils
 		unsupportFunctions.add( "ARRAY_UPPER" );
 	}
 
-	private static List<String> supportFunctions = new ArrayList<String>( );
+	private static List<String> supportFunctionRegexs = new ArrayList<String>( );
 	static
 	{
-		supportFunctions.add( "(?i)RAND\\(\\s*\\)" );
+		supportFunctionRegexs.add( "(?i)RAND\\(\\s*\\)" );
+	}
+
+	private static List<String> unsupportFunctionRegexs = new ArrayList<String>( );
+	static
+	{
+		unsupportFunctionRegexs.add( "(?i)PG_.*" );
 	}
 
 	private static List<String> intTypefunctions = new ArrayList<String>( );
@@ -415,9 +424,14 @@ public class FunctionUtils
 		return unsupportFunctions;
 	}
 
-	public static List<String> getSupportFunctions( )
+	public static List<String> getSupportFunctionRegexs( )
 	{
-		return supportFunctions;
+		return supportFunctionRegexs;
+	}
+
+	public static List<String> getUnSupportFunctionRegexs( )
+	{
+		return unsupportFunctionRegexs;
 	}
 
 	public static List<String> getIntTypefunctions( )
@@ -568,7 +582,7 @@ public class FunctionUtils
 			return "timestampDiff";
 		if ( function.equalsIgnoreCase( "DATE_DIFF" ) )
 			return "dateDiff";
-		
+
 		if ( function.equalsIgnoreCase( "ARRAY_APPEND" ) )
 			return "arrayAppend";
 		if ( function.equalsIgnoreCase( "ARRAY_CAT" ) )
