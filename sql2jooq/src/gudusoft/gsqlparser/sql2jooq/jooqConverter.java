@@ -864,6 +864,16 @@ public class jooqConverter
 			int index = javaCode.lastIndexOf( clazz );
 			if ( index > classIndex )
 			{
+				if ( index > 0 )
+				{
+					char ch = javaCode.charAt( index - 1 );
+					if ( ( ch >= 'a' && ch <= 'z' )
+							|| ( ch >= 'A' && ch <= 'Z' )
+							|| ( ch >= '0' && ch <= '9' ) )
+					{
+						continue;
+					}
+				}
 				className = clazz;
 				classIndex = index;
 			}
@@ -1129,7 +1139,7 @@ public class jooqConverter
 							columns ) );
 					break;
 				case array_constructor_t :
-					buffer.append( getListExpressionJavaCode( expression,
+					buffer.append( getArrayExpressionJavaCode( expression,
 							stmt,
 							columns ) );
 					break;
@@ -1247,6 +1257,27 @@ public class jooqConverter
 					true ) );
 		}
 		return buffer.toString( );
+	}
+
+	private String getArrayExpressionJavaCode( TExpression expression,
+			TCustomSqlStatement stmt, ColumnMetaData[] columns )
+	{
+		TExpressionList exprList = expression.getExprList( );
+		StringBuffer buffer = new StringBuffer( );
+		buffer.append( "new Field[]{ " );
+		for ( int i = 0; i < exprList.size( ); i++ )
+		{
+			buffer.append( "DSL.field( \""
+					+ escape( exprList.getExpression( i ).toString( ) )
+					+ "\" )" );
+			if ( i < exprList.size( ) - 1 )
+			{
+				buffer.append( ", " );
+			}
+		}
+		buffer.append( " }" );
+		return buffer.toString( );
+
 	}
 
 	private String getListExpressionJavaCode( TExpression expression,

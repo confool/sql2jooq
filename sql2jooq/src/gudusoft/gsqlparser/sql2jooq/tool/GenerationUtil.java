@@ -113,21 +113,23 @@ public class GenerationUtil
 		{
 			case dbvansi :
 				return SQLDialect.SQL99;
-			case dbvdb2 :
-				return SQLDialect.DB2;
+				// case dbvdb2 :
+				// return SQLDialect.DB2;
 			case dbvmysql :
 				return SQLDialect.MYSQL;
-			case dbvoracle :
-				return SQLDialect.ORACLE;
+				// case dbvoracle :
+				// return SQLDialect.ORACLE;
 			case dbvpostgresql :
 				return SQLDialect.POSTGRES;
-			case dbvsybase :
-				return SQLDialect.SYBASE;
+				// case dbvsybase :
+				// return SQLDialect.SYBASE;
 			case dbvfirebird :
 				return SQLDialect.FIREBIRD;
-			case dbvmssql :
-				return SQLDialect.SQLSERVER;
+				// case dbvmssql :
+				// return SQLDialect.SQLSERVER;
+				// case dbvoracle :
+				// return SQLDialect.ORACLE;
 		}
-		return SQLDialect.ORACLE;
+		return SQLDialect.MYSQL;
 	}
 }
