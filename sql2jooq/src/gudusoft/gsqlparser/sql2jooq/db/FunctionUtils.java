@@ -240,6 +240,7 @@ public class FunctionUtils
 		unsupportFunctions.add( "CURRENT_SETTING" );
 		unsupportFunctions.add( "SET_CONFIG" );
 		unsupportFunctions.add( "GENERATE_SUBSCRIPTS" );
+		unsupportFunctions.add( "GENERATE_SERIES" );
 	}
 
 	private static List<String> supportFunctionRegexs = new ArrayList<String>( );
