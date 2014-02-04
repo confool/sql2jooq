@@ -1147,10 +1147,12 @@ public class jooqConverter
 				case unknown_t :
 					throw new PlainSQLException( expression, stmt );
 				default :
-					throw new UnsupportedOperationException( "\nExpression: "
+					System.err.println( "Expression: "
 							+ expression.toString( )
 							+ "\nDoesn't support the operation: "
-							+ expression.getExpressionType( ) );
+							+ expression.getExpressionType( )
+							+ "\nConvert it to the plain sql." );
+					throw new PlainSQLException( expression, stmt );
 			}
 		}
 		catch ( PlainSQLException e )
@@ -1905,11 +1907,29 @@ public class jooqConverter
 			};
 		}
 
+		if ( expr.getQuantifier( ) != null )
+		{
+			String quantifier = expr.getQuantifier( )
+					.toString( )
+					.trim( )
+					.toLowerCase( );
+			if ( quantifier.equals( "all" ) || quantifier.equals( "any" ) )
+			{
+				buffer.append( "DSL." + quantifier + "( " );
+			}
+			else
+			{
+				throw new PlainSQLException( expr, stmt );
+			}
+		}
 		buffer.append( "DSL.row( "
 				+ getExpressionJavaCode( expr.getRightOperand( ), stmt, columns )
 				+ " )" );
-
 		buffer.append( " )" );
+		if ( expr.getQuantifier( ) != null )
+		{
+			buffer.append( " )" );
+		}
 		return buffer.toString( );
 	}
 
