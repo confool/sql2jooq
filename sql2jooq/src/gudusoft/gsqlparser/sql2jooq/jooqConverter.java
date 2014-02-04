@@ -1134,9 +1134,10 @@ public class jooqConverter
 				case typecast_t :
 					throw new PlainSQLException( expression, stmt );
 				case row_constructor_t :
-					buffer.append( getListExpressionJavaCode( expression,
-							stmt,
-							columns ) );
+					buffer.append( "DSL.row( "
+							+ getListExpressionJavaCode( expression,
+									stmt,
+									columns ) + " )" );
 					break;
 				case array_constructor_t :
 					buffer.append( getArrayExpressionJavaCode( expression,
@@ -2522,7 +2523,7 @@ public class jooqConverter
 				}
 			}
 		}
-		
+
 		if ( flag )
 		{
 
