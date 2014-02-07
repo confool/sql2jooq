@@ -2250,8 +2250,11 @@ public class jooqConverter
 		}
 		else
 		{
-			String content = function.toString( ).toLowerCase( );
-			content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+			String content = function.toString( ).toLowerCase( ).trim( );
+			if ( content.indexOf( '(' ) > -1 )
+			{
+				content = content.substring( 0, content.indexOf( '(' ) );
+			}
 
 			if ( FunctionUtils.isMysqlDSL( content ) )
 			{
@@ -2374,8 +2377,11 @@ public class jooqConverter
 
 	private boolean needCompileFunction( TFunctionCall function )
 	{
-		String content = function.toString( ).toLowerCase( );
-		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+		String content = function.toString( ).toLowerCase( ).trim( );
+		if ( content.indexOf( '(' ) != -1 )
+		{
+			content = content.substring( 0, content.indexOf( '(' ) );
+		}
 		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 1 )
 		{
 			if ( content.equalsIgnoreCase( "log" )
@@ -2516,8 +2522,11 @@ public class jooqConverter
 
 	private boolean supportFunction( TFunctionCall function )
 	{
-		String content = function.toString( ).toLowerCase( );
-		content = content.substring( 0, content.indexOf( '(' ) ).trim( );
+		String content = function.toString( ).trim( ).toLowerCase( );
+		if ( content.indexOf( '(' ) != -1 )
+		{
+			content = content.substring( 0, content.indexOf( '(' ) );
+		}
 		boolean flag = false;
 		List<String> unsupportFunctions = FunctionUtils.getUnsupportFunctions( sqlparser.getDbVendor( ) );
 		for ( int i = 0; i < unsupportFunctions.size( ); i++ )
