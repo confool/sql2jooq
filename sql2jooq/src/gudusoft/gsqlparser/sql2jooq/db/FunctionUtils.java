@@ -595,6 +595,45 @@ public class FunctionUtils
 			return "arrayToString";
 		if ( function.equalsIgnoreCase( "STRING_TO_ARRAY" ) )
 			return "stringToArray";
+		
+		if ( function.equalsIgnoreCase( "BIT_AND" ) )
+			return "bitAnd";
+		if ( function.equalsIgnoreCase( "BIT_OR" ) )
+			return "bitOr";
+
+		if ( function.equalsIgnoreCase( "REGR_SLOPE" ) )
+			return "regrSlope";
+		if ( function.equalsIgnoreCase( "REGR_SLOPE" ) )
+			return "regrSlope";
+		if ( function.equalsIgnoreCase( "REGR_INTERCEPT" ) )
+			return "regrIntercept";
+		if ( function.equalsIgnoreCase( "REGR_COUNT" ) )
+			return "regrCount";
+		if ( function.equalsIgnoreCase( "REGR_R2" ) )
+			return "regrR2";
+		if ( function.equalsIgnoreCase( "REGR_AVGX" ) )
+			return "regrAvgX";
+		if ( function.equalsIgnoreCase( "REGR_AVGY" ) )
+			return "regrAvgY";
+		if ( function.equalsIgnoreCase( "REGR_SXX" ) )
+			return "regrSXX";
+		if ( function.equalsIgnoreCase( "REGR_SXY" ) )
+			return "regrSXY";
+		if ( function.equalsIgnoreCase( "REGR_SYY" ) )
+			return "regrSYY";
+		if ( function.equalsIgnoreCase( "LIST_AGG" ) )
+			return "listAgg";
+		
+		if ( function.equalsIgnoreCase( "stddev_pop" ) )
+			return "stddevPop";
+		if ( function.equalsIgnoreCase( "stddev_samp" ) )
+			return "stddevSamp";
+		
+		if ( function.equalsIgnoreCase( "VAR_POP" ) )
+			return "varPop";
+		if ( function.equalsIgnoreCase( "VAR_SAMP" ) )
+			return "varSamp";
+		
 		return function;
 	}
 }
