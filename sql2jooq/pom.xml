@@ -45,7 +45,6 @@
     </properties>
     
     <build>
-        <sourceDirectory>src</sourceDirectory>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -55,7 +54,53 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+
+            <!-- Initialise the database schemas from the provided SQL files -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>sql-maven-plugin</artifactId>
+                <version>1.5</version>
+        
+                <configuration>
+                    <forkMode>always</forkMode>
+                </configuration>
+        
+                <executions>
+                    <execution>
+                        <id>create-database-mysql-sakila</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <driver>com.mysql.jdbc.Driver</driver>
+                            <url>jdbc:mysql://localhost/sakila</url>
+                            <username>root</username>
+                            <password></password>
+                            
+                            <!-- See http://stackoverflow.com/a/13082837/521799 -->
+                            <delimiterType>row</delimiterType>
+        
+                            <autocommit>true</autocommit>
+                            <srcFiles>
+                                <srcFile>src/test/resources/sakila-schema.sql</srcFile>
+                                <srcFile>src/test/resources/sakila-data.sql</srcFile>
+                            </srcFiles>
+                        </configuration>
+                    </execution>
+                </executions>
+        
+                <dependencies>
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>5.1.29</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+                
         </plugins>
+        
     </build>
     
     <dependencies>
