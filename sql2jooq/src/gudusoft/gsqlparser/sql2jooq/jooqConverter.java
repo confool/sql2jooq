@@ -1129,6 +1129,20 @@ public class jooqConverter
 				case subquery_t :
 					buffer.append( getQueryJavaCode( expression.getSubQuery( ) ) );
 					break;
+				case unary_squareroot_t :
+					buffer.append( "DSL.sqrt( "
+							+ getExpressionJavaCode( expression.getRightOperand( ),
+									stmt,
+									columns )
+							+ " )" );
+					break;
+				case unary_absolutevalue_t :
+					buffer.append( "DSL.abs( "
+							+ getExpressionJavaCode( expression.getRightOperand( ),
+									stmt,
+									columns )
+							+ " )" );
+					break;
 				case unary_binary_operator_t :
 					throw new PlainSQLException( expression, stmt );
 				case typecast_t :
