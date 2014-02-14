@@ -1,0 +1,112 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.jooq</groupId>
+    <artifactId>sql2jooq</artifactId>
+    <version>${org.jooq.version}</version>
+
+    <licenses>
+        <license>
+            <name>jOOQ License</name>
+            <url>http://www.jooq.org/licensing</url>
+            <distribution>manual</distribution>
+            <comments>
+                The jOOQ License applies to the jOOQ code generator and runtime libraries. 
+                The licensor and copyright holder is Data Geekery GmbH
+                http://www.datageekery.com
+            </comments>
+        </license>
+        <license>
+            <name>SQL Parser License</name>
+            <url>https://github.com/sqlparser/sql2jooq/blob/master/lib/gsqlparser_license.txt</url>
+            <distribution>manual</distribution>
+            <comments>
+                The SQL Parser License applies to the gsp.jar library, which is used by sql2jooq.
+                The licensor and copyright holder is Gudu Software Limited
+                http://www.dpriver.com/
+            </comments>
+        </license>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>manual</distribution>
+            <comments>
+                The Apache License 2.0 applies to the sql2jooq artifact, which is used to parse SQL
+                and generate jOOQ code.
+                The licensors and copyright holders are Data Geekery GmbH and Gudu Software Limited
+            </comments>
+        </license>
+    </licenses>
+
+    <properties>
+        <org.jooq.version>3.3.0-SNAPSHOT</org.jooq.version>
+    </properties>
+    
+    <build>
+        <sourceDirectory>src</sourceDirectory>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <dependencies>
+        <!-- jOOQ and SQL Parser artifacts -->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>jooq</artifactId>
+            <version>${org.jooq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>gudusoft</groupId>
+            <artifactId>gsqlparser</artifactId>
+            <version>1.4.8.7</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/gsp.jar</systemPath>
+        </dependency>
+
+        <!-- JDBC drivers -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.29</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>9.3-1100-jdbc41</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
