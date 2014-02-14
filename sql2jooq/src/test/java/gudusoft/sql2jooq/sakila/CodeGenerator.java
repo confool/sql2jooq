@@ -2,7 +2,7 @@
 package gudusoft.sql2jooq.sakila;
 
 import gudusoft.gsqlparser.EDbVendor;
-import gudusoft.gsqlparser.sql2jooq.jooqConverter;
+import gudusoft.gsqlparser.sql2jooq.SQL2jOOQ;
 import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
 import gudusoft.gsqlparser.sql2jooq.tool.DatabaseMetaUtil;
 import gudusoft.sql2jooq.util.FileUtil;
@@ -60,7 +60,7 @@ public class CodeGenerator
             	final String id = String.format("%1$4s", i).replace(" ", "0");
             	System.out.println("Generating code for : (" + id + ") " + query.replaceAll("[\\n\\r]+", "$0                             "));
 
-                jooqConverter convert = new jooqConverter( metaData, EDbVendor.dbvmysql, query );
+                SQL2jOOQ convert = new SQL2jOOQ( metaData, EDbVendor.dbvmysql, query );
                 convert.convert( );
                 
 				if ( convert.getErrorMessage( ) != null )

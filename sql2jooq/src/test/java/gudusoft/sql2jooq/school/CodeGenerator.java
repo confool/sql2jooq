@@ -2,7 +2,7 @@
 package gudusoft.sql2jooq.school;
 
 import gudusoft.gsqlparser.EDbVendor;
-import gudusoft.gsqlparser.sql2jooq.jooqConverter;
+import gudusoft.gsqlparser.sql2jooq.SQL2jOOQ;
 import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
 import gudusoft.gsqlparser.sql2jooq.tool.DatabaseMetaUtil;
 import gudusoft.sql2jooq.util.FileUtil;
@@ -33,7 +33,7 @@ public class CodeGenerator
 			DatabaseMetaData metaData = DatabaseMetaUtil.getDataBaseMetaData( conn,
 					"school" );
 
-			jooqConverter convert = new jooqConverter( metaData,
+			SQL2jOOQ convert = new SQL2jOOQ( metaData,
 					EDbVendor.dbvpostgresql,
 					"select * from student;" );
 			convert.convert( );

@@ -56,7 +56,7 @@ import org.jooq.SQLDialect;
 import org.jooq.impl.DefaultDataType;
 import org.jooq.tools.StringUtils;
 
-public class jooqConverter
+public class SQL2jOOQ
 {
 
 	private String errorMessage;
@@ -105,7 +105,7 @@ public class jooqConverter
 		asTables.clear( );
 	}
 
-	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
+	public SQL2jOOQ( DatabaseMetaData metadata, EDbVendor vendor,
 			String sqlText )
 	{
 		sqlparser = new TGSqlParser( vendor );
@@ -113,7 +113,7 @@ public class jooqConverter
 		this.metadata = metadata;
 	}
 
-	public jooqConverter( DatabaseMetaData metadata, EDbVendor vendor,
+	public SQL2jOOQ( DatabaseMetaData metadata, EDbVendor vendor,
 			File sqlFile )
 	{
 		sqlparser = new TGSqlParser( vendor );
@@ -121,13 +121,13 @@ public class jooqConverter
 		this.metadata = metadata;
 	}
 
-	public jooqConverter( EDbVendor vendor, String sqlText )
+	public SQL2jOOQ( EDbVendor vendor, String sqlText )
 	{
 		sqlparser = new TGSqlParser( vendor );
 		sqlparser.sqltext = sqlText;
 	}
 
-	public jooqConverter( EDbVendor vendor, File sqlFile )
+	public SQL2jOOQ( EDbVendor vendor, File sqlFile )
 	{
 		sqlparser = new TGSqlParser( vendor );
 		sqlparser.sqlfilename = sqlFile.getAbsolutePath( );

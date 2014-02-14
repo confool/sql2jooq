@@ -2,7 +2,7 @@
 package gudusoft.sql2jooq.guestbook;
 
 import gudusoft.gsqlparser.EDbVendor;
-import gudusoft.gsqlparser.sql2jooq.jooqConverter;
+import gudusoft.gsqlparser.sql2jooq.SQL2jOOQ;
 import gudusoft.gsqlparser.sql2jooq.db.DatabaseMetaData;
 import gudusoft.gsqlparser.sql2jooq.tool.DatabaseMetaUtil;
 import gudusoft.sql2jooq.util.FileUtil;
@@ -33,7 +33,7 @@ public class CodeGenerator
 			DatabaseMetaData metaData = DatabaseMetaUtil.getDataBaseMetaData( conn,
 					"guestbook" );
 
-			jooqConverter convert = new jooqConverter( metaData,
+			SQL2jOOQ convert = new SQL2jOOQ( metaData,
 					EDbVendor.dbvmysql,
 					"select id, title, body, address from posts a, mails b where a.body = 'Hello World' and a.timestamp = '2003-10-01 00:24:08' and a.id = 1 group by a.body, a.id having count(*) > 0 order by a.id;" );
 			convert.convert( );
