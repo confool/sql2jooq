@@ -1,0 +1,67 @@
+General SQL Parser Components Developer Licensing Agreement
+Copyright 2003-2014, GUDU SOFTWARE LIMITED All Rights Reserved
+http://www.sqlparser.com. 
+---------------------------------------------------------------
+
+PLEASE READ THIS LICENSE AGREEMENT CAREFULLY.BY INSTALLING OR USING THIS 
+SOFTWARE,YOU INDICATE ACCEPTANCE OF AND AGREE TO BECOME BOUND BY THE TERMS AND
+CONDITIONS OF THIS LICENSE. IF YOU DO NOT AGREE TO THE TERMS OF THIS LICENSE, 
+DO NOT INSTALL OR USE THIS SOFTWARE AND PROMPTLY RETURN IT TO GUDU SOFTWARE 
+LIMITED.
+
+INTRODUCTION
+
+gsp.jar(general sql parser) used in sql2jooq project can be deployed with
+sql2jooq project or any projects that include sql2jooq. For other projects,
+please check section 3 RESTRICTIONS.
+
+This is a legal agreement between you (either an individual or an entity), 
+the end-user, and GUDU SOFTWARE LIMITED(www.sqlparser.com). 
+
+LICENSE
+
+1. GRANT OF LICENSE
+
+This License Agreement grants you the next:
+gsp.jar(general sql parser) may be used by developers inside an organization on
+one or more computers for any projects.
+
+
+2. COPYRIGHT
+
+The Software is owned by GUDU SOFTWARE LIMITED and is protected by international
+copyright laws and treaty provisions. You may not remove the copyright notice 
+from any copy of the Software or any copy of the written materials, if any, 
+accompanying the Software. 
+
+3. RESTRICTIONS
+
+The license grants right using general sql parser(gsp.jar) to developers inside
+an organization.
+
+You may not:
+
+ - Distribute this library to end users outside your organization(a single 
+   physical location) with your application without a distribution license.
+   (Please contact sales@sqlparser.com for more information about distribution
+    license)
+ - Deploy this library to a production server without a distribution license.
+ - Remove or alter any copyright, trademark, or other proprietary rights notice
+   contained in any portion of units, source code,or other files that bear such 
+   a notice;
+
+
+4. SUPPORT
+
+GUDU SOFTWARE LIMITED makes no representation or warranty that the software or
+documentation are "error-free," or meet any user's particular standards, 
+requirements, or needs. In all events, GUDU SOFTWARE LIMITED will exercise tech
+support of the Software.
+
+5. Limitations
+
+This version of gsp.jar(general sql parser) can process SQL query with size 
+less than 10,000 characters which is adequate for sql2jooq tool or to evaluate
+this SQL Parser with the most SQL script. if you need a full version of this
+sql parser without any query size limitation, please visit our official website:
+http://www.sqlparser.com

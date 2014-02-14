@@ -1,0 +1,28 @@
+sql2jooq is a joint venture by Data Geekery GmbH and Gudu Software Limited.
+---------------------------------------------------------------------------
+
+Several licenses apply:
+
+---------------------------------------------------------------------------
+- jOOQ License
+  http://www.jooq.org/licensing
+
+  The jOOQ License applies to the jOOQ code generator and runtime libraries. 
+  The licensor and copyright holder is Data Geekery GmbH
+  http://www.datageekery.com
+  
+---------------------------------------------------------------------------
+- SQL Parser License
+  https://github.com/sqlparser/sql2jooq/blob/master/sql2jooq/LICENSE-GSQLPARSER.txt
+
+  The SQL Parser License applies to the gsp.jar library, which is used by sql2jooq.
+  The licensor and copyright holder is Gudu Software Limited
+  http://www.dpriver.com/
+  
+---------------------------------------------------------------------------
+- Apache License, Version 2.0
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  The Apache License 2.0 applies to the sql2jooq artifact, which is used to parse SQL
+  and generate jOOQ code.
+  The licensors and copyright holders are Data Geekery GmbH and Gudu Software Limited
