@@ -1,5 +1,8 @@
-sql2jooq is a joint venture by Data Geekery GmbH and Gudu Software Limited.
----------------------------------------------------------------------------
+Parse SQL, generate jOOQ code
+-----------------------------
+
+### A joint venture by Data Geekery GmbH and Gudu Software Limited.
+
 
 At its current stage, we support parsing MySQL and PostgreSQL dialects to
 render jOOQ code from them. We are at an early beta stage and we're happy
