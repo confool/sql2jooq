@@ -4,6 +4,7 @@ package gudusoft.gsqlparser.sql2jooq;
 import gudusoft.gsqlparser.EDbVendor;
 import gudusoft.gsqlparser.EExpressionType;
 import gudusoft.gsqlparser.EJoinType;
+import gudusoft.gsqlparser.ETableSource;
 import gudusoft.gsqlparser.TBaseType;
 import gudusoft.gsqlparser.TCustomSqlStatement;
 import gudusoft.gsqlparser.TGSqlParser;
@@ -15,7 +16,9 @@ import gudusoft.gsqlparser.nodes.TGroupByItem;
 import gudusoft.gsqlparser.nodes.TGroupByItemList;
 import gudusoft.gsqlparser.nodes.TJoin;
 import gudusoft.gsqlparser.nodes.TJoinItem;
+import gudusoft.gsqlparser.nodes.TMultiTarget;
 import gudusoft.gsqlparser.nodes.TObjectName;
+import gudusoft.gsqlparser.nodes.TObjectNameList;
 import gudusoft.gsqlparser.nodes.TOrderByItem;
 import gudusoft.gsqlparser.nodes.TOrderByItemList;
 import gudusoft.gsqlparser.nodes.TResultColumn;
@@ -318,23 +321,25 @@ public class jooqConverter
 				for ( int i = 0; i < tables.size( ); i++ )
 				{
 					TTable table = tables.getTable( i );
-					if ( table.getAliasClause( ) != null )
+					if ( table.getAliasClause( ) != null
+							&& table.getTableType( ) != ETableSource.rowList )
 					{
 						StringBuffer buffer = new StringBuffer( );
 						if ( table.getSubquery( ) == null )
 						{
-							buffer.append( getTableJavaName( table.getName( ) ) )
+							buffer.append( getTableJavaName( table ) )
 									.append( " " )
 									.append( table.getAliasClause( )
 											.toString( )
 											.toLowerCase( ) )
 									.append( " = " )
-									.append( getTableRealName( table ) )
+									.append( getTableRealName( table, stmt ) )
 									.append( ".as(\"" )
 									.append( table.getAliasClause( )
+											.getAliasName( )
 											.toString( )
-											.toLowerCase( ) )
-									.append( "\");\n" );
+											.toLowerCase( ) );
+							buffer.append( "\");\n" );
 						}
 						else
 						{
@@ -543,7 +548,7 @@ public class jooqConverter
 			{
 				TJoin join = stmt.joins.getJoin( i );
 
-				buffer.append( getTableName( join.getTable( ) ) );
+				buffer.append( getTableName( join.getTable( ), stmt ) );
 
 				if ( join.getJoinItems( ) != null
 						&& join.getJoinItems( ).size( ) > 0 )
@@ -596,7 +601,7 @@ public class jooqConverter
 						{
 							buffer.append( ".join( " );
 						}
-						buffer.append( getTableName( joinItem.getTable( ) ) );
+						buffer.append( getTableName( joinItem.getTable( ), stmt ) );
 						if ( joinItem.getOnCondition( ) != null )
 						{
 							buffer.append( " ).on( " );
@@ -933,26 +938,80 @@ public class jooqConverter
 		return getExpressionJavaCode( expression, stmt, null );
 	}
 
-	private String getTableName( TTable table )
+	private String getTableName( TTable table, TCustomSqlStatement stmt )
 	{
 		if ( table.getTableName( ) != null
 				&& table.getName( ).equalsIgnoreCase( "DUAL" ) )
 		{
 			return "DSL.dual()";
 		}
-		else if ( table.getAliasClause( ) != null )
+		else if ( table.getAliasClause( ) != null
+				&& table.getTableType( ) != ETableSource.rowList )
 		{
 			return table.getAliasClause( ).toString( ).toLowerCase( );
 		}
+		else if ( table.getAliasClause( ) != null
+				&& table.getTableType( ) == ETableSource.rowList )
+		{
+			StringBuffer buffer = new StringBuffer( );
+			buffer.append( getTableRealName( table, stmt ) );
+			buffer.append( ".as( \"" )
+					.append( table.getAliasClause( )
+							.getAliasName( )
+							.toString( )
+							.toLowerCase( ) )
+					.append( "\"" );
+			TObjectNameList columnNames = table.getAliasClause( ).getColumns( );
+			if ( columnNames != null )
+			{
+				for ( int j = 0; j < columnNames.size( ); j++ )
+				{
+					buffer.append( ", \"" );
+					buffer.append( columnNames.getObjectName( j )
+							.toString( )
+							.toLowerCase( ) ).append( "\"" );
+				}
+			}
+			buffer.append( " )" );
+			return buffer.toString( );
+		}
 		else
 		{
-			return getTableRealName( table );
+			return getTableRealName( table, stmt );
 		}
 	}
 
-	private String getTableRealName( TTable table )
+	private String getTableRealName( TTable table, TCustomSqlStatement stmt )
 	{
-		return getTableJavaName( table.getTableName( ).toString( ) )
+		if ( table.getTableType( ) == ETableSource.rowList )
+		{
+			StringBuffer buffer = new StringBuffer( );
+			buffer.append( "DSL.values( " );
+			for ( int i = 0; i < table.getRowList( ).size( ); i++ )
+			{
+				TMultiTarget target = table.getRowList( ).getMultiTarget( i );
+				TResultColumnList columns = target.getColumnList( );
+				buffer.append( "DSL.row( " );
+				for ( int j = 0; j < columns.size( ); j++ )
+				{
+					TResultColumn column = columns.getResultColumn( j );
+					buffer.append( getExpressionJavaCode( column.getExpr( ),
+							stmt ) );
+					if ( j < columns.size( ) - 1 )
+					{
+						buffer.append( ", " );
+					}
+				}
+				buffer.append( " )" );
+				if ( i < table.getRowList( ).size( ) - 1 )
+				{
+					buffer.append( ", " );
+				}
+			}
+			buffer.append( " )" );
+			return buffer.toString( );
+		}
+		return getTableJavaName( table )
 				+ "."
 				+ table.getTableName( ).toString( ).toUpperCase( );
 	}
@@ -1599,6 +1658,7 @@ public class jooqConverter
 			buffer.append( "DSL.row( " );
 			buffer.append( getExpressionJavaCode( expression.getLeftOperand( ),
 					stmt,
+
 					column ) );
 			buffer.append( " )" );
 		}
@@ -2267,7 +2327,7 @@ public class jooqConverter
 			String content = function.toString( ).toLowerCase( ).trim( );
 			if ( content.indexOf( '(' ) > -1 )
 			{
-				content = content.substring( 0, content.indexOf( '(' ) );
+				content = content.substring( 0, content.indexOf( '(' ) ).trim( );
 			}
 
 			if ( FunctionUtils.isMysqlDSL( content ) )
@@ -2394,7 +2454,7 @@ public class jooqConverter
 		String content = function.toString( ).toLowerCase( ).trim( );
 		if ( content.indexOf( '(' ) != -1 )
 		{
-			content = content.substring( 0, content.indexOf( '(' ) );
+			content = content.substring( 0, content.indexOf( '(' ) ).trim( );
 		}
 		if ( function.getArgs( ) != null && function.getArgs( ).size( ) == 1 )
 		{
@@ -2539,7 +2599,7 @@ public class jooqConverter
 		String content = function.toString( ).trim( ).toLowerCase( );
 		if ( content.indexOf( '(' ) != -1 )
 		{
-			content = content.substring( 0, content.indexOf( '(' ) );
+			content = content.substring( 0, content.indexOf( '(' ) ).trim( );
 		}
 		boolean flag = false;
 		List<String> unsupportFunctions = FunctionUtils.getUnsupportFunctions( sqlparser.getDbVendor( ) );
@@ -2697,12 +2757,14 @@ public class jooqConverter
 
 			if ( metadata == null || ignoreGeneric )
 				return "((Field)"
-						+ getTableName( table )
+						+ getTableName( table, stmt )
 						+ "."
 						+ columnName.toUpperCase( )
 						+ ")";
 			else
-				return getTableName( table ) + "." + columnName.toUpperCase( );
+				return getTableName( table, stmt )
+						+ "."
+						+ columnName.toUpperCase( );
 		}
 	}
 
@@ -2777,7 +2839,7 @@ public class jooqConverter
 							.toString( )
 							.equalsIgnoreCase( tableName ) )
 			{
-				return getTableName( table );
+				return getTableName( table, stmt );
 			}
 			else if ( table.getAliasClause( ) != null
 					&& table.getAliasClause( )
@@ -2790,8 +2852,17 @@ public class jooqConverter
 		return tableName;
 	}
 
-	private String getTableJavaName( String table )
+	private String getTableJavaName( TTable table )
 	{
-		return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table ) );
+		if ( table.getTableName( ) != null )
+		{
+			return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table.getName( ) ) );
+		}
+		else if ( table.getAliasClause( ) != null )
+		{
+			return GenerationUtil.convertToJavaIdentifier( StringUtils.toCamelCase( table.getAliasClause( )
+					.toString( ) ) );
+		}
+		return null;
 	}
 }
