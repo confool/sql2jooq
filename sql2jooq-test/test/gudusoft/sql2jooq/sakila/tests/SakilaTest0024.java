@@ -42,7 +42,7 @@ public class SakilaTest0024 extends MySQLTest
 
 Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
 	.from( DSL.dual() )
-	.where( DSL.inline( "abc" ).likeRegex( DSL.inline( ".*b.*" ) ) ).fetch( );
+	.where( DSL.inline( String.valueOf( "abc" ) ).likeRegex( DSL.inline( String.valueOf( ".*b.*" ) ) ) ).fetch( );
 
 		return result;
 	}

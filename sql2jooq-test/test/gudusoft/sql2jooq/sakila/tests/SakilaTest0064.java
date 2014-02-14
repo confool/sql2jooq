@@ -40,7 +40,7 @@ public class SakilaTest0064 extends MySQLTest
 	{
 		DSLContext create = DSL.using(conn, SQLDialect.MYSQL);
 
-Result<Record1<String>> result = create.select( DSL.concat( DSL.inline( "a" ), DSL.inline( "b" ), DSL.inline( "c" ) ) ).fetch( );
+Result<Record1<String>> result = create.select( DSL.concat( DSL.inline( String.valueOf( "a" ) ), DSL.inline( String.valueOf( "b" ) ), DSL.inline( String.valueOf( "c" ) ) ) ).fetch( );
 
 		return result;
 	}

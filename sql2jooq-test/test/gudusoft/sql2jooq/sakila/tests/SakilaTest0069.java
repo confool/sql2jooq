@@ -42,7 +42,7 @@ public class SakilaTest0069 extends MySQLTest
 
 Result<Record1<Integer>> result = create.select( DSL.inline( 1 ) )
 	.from( DSL.dual() )
-	.where( DSL.inline( "ab%cd" ).like( DSL.inline( "%!%%" ), '!' ) ).fetch( );
+	.where( DSL.inline( String.valueOf( "ab%cd" ) ).like( DSL.inline( String.valueOf( "%!%%" ) ), '!' ) ).fetch( );
 
 		return result;
 	}
