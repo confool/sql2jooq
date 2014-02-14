@@ -42,6 +42,16 @@
 
     <properties>
         <org.jooq.version>3.3.0-SNAPSHOT</org.jooq.version>
+        
+        <db.mysql.driver>com.mysql.jdbc.Driver</db.mysql.driver>
+        <db.mysql.url>jdbc:mysql://localhost/test</db.mysql.url>
+        <db.mysql.username>root</db.mysql.username>
+        <db.mysql.password></db.mysql.password>
+        
+        <db.postgresql.driver>org.postgresql.Driver</db.postgresql.driver>
+        <db.postgresql.url>jdbc:postgresql://localhost:5434/postgres</db.postgresql.url>
+        <db.postgresql.username>postgres</db.postgresql.username>
+        <db.postgresql.password>test</db.postgresql.password>
     </properties>
     
     <build>
@@ -67,24 +77,49 @@
         
                 <executions>
                     <execution>
-                        <id>create-database-mysql-sakila</id>
+                        <id>create-database-mysql</id>
                         <phase>generate-test-sources</phase>
                         <goals>
                             <goal>execute</goal>
                         </goals>
                         <configuration>
-                            <driver>com.mysql.jdbc.Driver</driver>
-                            <url>jdbc:mysql://localhost/sakila</url>
-                            <username>root</username>
-                            <password></password>
+                            <driver>${db.mysql.driver}</driver>
+                            <url>${db.mysql.url}</url>
+                            <username>${db.mysql.username}</username>
+                            <password>${db.mysql.password}</password>
                             
                             <!-- See http://stackoverflow.com/a/13082837/521799 -->
                             <delimiterType>row</delimiterType>
         
                             <autocommit>true</autocommit>
                             <srcFiles>
-                                <srcFile>src/test/resources/sakila-schema.sql</srcFile>
-                                <srcFile>src/test/resources/sakila-data.sql</srcFile>
+                                <srcFile>src/test/resources/sql/mysql-guestbook.sql</srcFile>
+                                <!-- 
+                                <srcFile>src/test/resources/sql/mysql-sakila-schema.sql</srcFile>
+                                <srcFile>src/test/resources/sql/mysql-sakila-data.sql</srcFile>
+                                 -->
+                            </srcFiles>
+                        </configuration>
+                    </execution>
+                    
+                    <execution>
+                        <id>create-database-postgresql</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <driver>${db.postgresql.driver}</driver>
+                            <url>${db.postgresql.url}</url>
+                            <username>${db.postgresql.username}</username>
+                            <password>${db.postgresql.password}</password>
+                            
+                            <!-- See http://stackoverflow.com/a/13082837/521799 -->
+                            <delimiterType>row</delimiterType>
+        
+                            <autocommit>true</autocommit>
+                            <srcFiles>
+                                <srcFile>src/test/resources/sql/postgresql-school.sql</srcFile>
                             </srcFiles>
                         </configuration>
                     </execution>
@@ -96,11 +131,128 @@
                         <artifactId>mysql-connector-java</artifactId>
                         <version>5.1.29</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>9.3-1100-jdbc41</version>
+                    </dependency>
                 </dependencies>
             </plugin>
-                
+
+            <!-- The jOOQ code generator plugin -->
+            <plugin>
+                <groupId>org.jooq</groupId>
+                <artifactId>jooq-codegen-maven</artifactId>
+                <version>${org.jooq.version}</version>
+
+                <executions>
+                    <execution>
+                        <id>generate-mysql-sakila</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <jdbc>
+                                <driver>${db.mysql.driver}</driver>
+                                <url>${db.mysql.url}</url>
+                                <user>${db.mysql.username}</user>
+                                <password>${db.mysql.password}</password>
+                            </jdbc>
+                            <generator>
+                                <name>org.jooq.util.DefaultGenerator</name>
+                                <database>
+                                    <name>org.jooq.util.mysql.MySQLDatabase</name>
+                                    <includes>.*</includes>
+                                    <excludes></excludes>
+                                    <inputSchema>sakila</inputSchema>
+                                </database>
+                                <generate>
+                                </generate>
+                                <target>
+                                    <packageName>gudusoft.db.mysql.sakila</packageName>
+                                    <directory>target/generated-test-sources/mysql-sakila</directory>
+                                </target>
+                            </generator>
+                        </configuration>
+                    </execution>
+                    
+                    <execution>
+                        <id>generate-mysql-guestbook</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <jdbc>
+                                <driver>${db.mysql.driver}</driver>
+                                <url>${db.mysql.url}</url>
+                                <user>${db.mysql.username}</user>
+                                <password>${db.mysql.password}</password>
+                            </jdbc>
+                            <generator>
+                                <name>org.jooq.util.DefaultGenerator</name>
+                                <database>
+                                    <name>org.jooq.util.mysql.MySQLDatabase</name>
+                                    <includes>.*</includes>
+                                    <excludes></excludes>
+                                    <inputSchema>guestbook</inputSchema>
+                                </database>
+                                <generate>
+                                </generate>
+                                <target>
+                                    <packageName>gudusoft.db.mysql.guestbook</packageName>
+                                    <directory>target/generated-test-sources/mysql-guestbook</directory>
+                                </target>
+                            </generator>
+                        </configuration>
+                    </execution>
+                    
+                    <execution>
+                        <id>generate-postgresql-school</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <jdbc>
+                                <driver>${db.postgresql.driver}</driver>
+                                <url>${db.postgresql.url}</url>
+                                <user>${db.postgresql.username}</user>
+                                <password>${db.postgresql.password}</password>
+                            </jdbc>
+                            <generator>
+                                <name>org.jooq.util.DefaultGenerator</name>
+                                <database>
+                                    <name>org.jooq.util.postgres.PostgresDatabase</name>
+                                    <includes>.*</includes>
+                                    <excludes></excludes>
+                                    <inputSchema>school</inputSchema>
+                                </database>
+                                <generate>
+                                </generate>
+                                <target>
+                                    <packageName>gudusoft.db.postgres.school</packageName>
+                                    <directory>target/generated-test-sources/postgres-school</directory>
+                                </target>
+                            </generator>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>mysql</groupId>
+                        <artifactId>mysql-connector-java</artifactId>
+                        <version>5.1.29</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>9.3-1100-jdbc41</version>
+                    </dependency>
+                </dependencies>
+            </plugin>                
         </plugins>
-        
     </build>
     
     <dependencies>
@@ -123,15 +275,13 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.29</version>
-            <scope>provided</scope>
-            <optional>true</optional>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>9.3-1100-jdbc41</version>
-            <scope>provided</scope>
-            <optional>true</optional>
+            <scope>test</scope>
         </dependency>
 
         <!-- Test dependencies -->
