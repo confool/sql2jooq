@@ -41,7 +41,7 @@
     </licenses>
 
     <properties>
-        <org.jooq.version>3.3.0</org.jooq.version>
+        <org.jooq.version>3.3.2</org.jooq.version>
         
         <db.mysql.driver>com.mysql.jdbc.Driver</db.mysql.driver>
         <db.mysql.url>jdbc:mysql://localhost/test</db.mysql.url>
